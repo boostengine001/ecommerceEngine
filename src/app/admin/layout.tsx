@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Users,
   LineChart,
+  Tag,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -41,6 +42,11 @@ export default function AdminLayout({
       href: '/admin/products',
       label: 'Products',
       icon: Package,
+    },
+    {
+      href: '/admin/categories',
+      label: 'Categories',
+      icon: Tag,
     },
     {
       href: '/admin/orders',
@@ -75,7 +81,7 @@ export default function AdminLayout({
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href) && (item.href === '/admin' ? pathname === item.href : true)}
                   tooltip={{
                     children: item.label,
                   }}
