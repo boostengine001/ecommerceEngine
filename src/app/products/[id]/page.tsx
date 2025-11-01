@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import ProductRecommendations from '@/components/products/product-recommendations';
 import AddToCartButton from '@/components/products/add-to-cart-button';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductPageProps {
   params: {
@@ -29,11 +30,17 @@ export default function ProductPage({ params }: ProductPageProps) {
       currency: 'USD',
     }).format(price);
   };
+  
+  const isOnSale = product.salePrice && product.salePrice < product.price;
+
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
-        <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+        <div className="overflow-hidden rounded-lg border bg-card shadow-sm relative">
+          {isOnSale && (
+            <Badge className="absolute top-4 left-4 z-10 text-lg" variant="destructive">Sale</Badge>
+          )}
           <Image
             src={product.image}
             alt={product.name}
@@ -47,7 +54,16 @@ export default function ProductPage({ params }: ProductPageProps) {
         <div className="flex flex-col justify-center">
           <h1 className="text-4xl font-bold">{product.name}</h1>
           <p className="mt-4 text-lg text-muted-foreground">{product.description}</p>
-          <p className="mt-6 font-headline text-4xl font-bold text-primary">{formatPrice(product.price)}</p>
+          <div className="mt-6 flex items-baseline gap-4">
+             <p className={`font-headline text-4xl font-bold ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
+                {formatPrice(isOnSale ? product.salePrice! : product.price)}
+            </p>
+            {isOnSale && (
+                <p className="text-2xl text-muted-foreground line-through">
+                    {formatPrice(product.price)}
+                </p>
+            )}
+          </div>
           <div className="mt-8">
             <AddToCartButton product={product} />
           </div>

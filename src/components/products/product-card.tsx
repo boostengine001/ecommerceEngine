@@ -7,6 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import type { Product } from '@/lib/types';
 import { useCart } from '@/hooks/use-cart';
 import { PlusCircle } from 'lucide-react';
+import { Badge } from '../ui/badge';
 
 interface ProductCardProps {
   product: Product;
@@ -22,11 +23,16 @@ export default function ProductCard({ product }: ProductCardProps) {
     }).format(price);
   };
 
+  const isOnSale = product.salePrice && product.salePrice < product.price;
+
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
       <CardHeader className="p-0">
         <Link href={`/products/${product.id}`} className="block">
-          <div className="aspect-square overflow-hidden">
+          <div className="aspect-square overflow-hidden relative">
+             {isOnSale && (
+                <Badge className="absolute top-2 left-2 z-10" variant="destructive">Sale</Badge>
+              )}
             <Image
               src={product.image}
               alt={product.name}
@@ -45,7 +51,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           </Link>
         </CardTitle>
         <div className="flex-grow" />
-        <p className="font-headline text-xl font-semibold text-primary">{formatPrice(product.price)}</p>
+        <div className="flex items-baseline gap-2">
+            <p className={`font-headline text-xl font-semibold ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
+                {formatPrice(isOnSale ? product.salePrice! : product.price)}
+            </p>
+            {isOnSale && (
+                <p className="text-sm text-muted-foreground line-through">
+                    {formatPrice(product.price)}
+                </p>
+            )}
+        </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button onClick={() => addToCart(product)} className="w-full">

@@ -3,6 +3,7 @@ export type Product = {
   name: string;
   description: string;
   price: number;
+  salePrice?: number;
   image: string;
   imageHint: string;
 };
@@ -48,4 +49,11 @@ export type Category = {
   imageHint: string;
 };
 
-    
+export type Review = {
+  id: string;
+  name: string;
+  avatar: string;
+  rating: number;
+  title: string;
+  comment: string;
+};

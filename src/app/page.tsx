@@ -2,6 +2,9 @@ import { products } from '@/lib/products';
 import ProductCard from '@/components/products/product-card';
 import HeroSlider from '@/components/home/hero-slider';
 import CategorySection from '@/components/home/category-section';
+import ReviewsSection from '@/components/home/reviews-section';
+import OnSaleSection from '@/components/home/on-sale-section';
+import BestSellersSection from '@/components/home/best-sellers-section';
 
 export default function HomePage() {
   return (
@@ -18,9 +21,10 @@ export default function HomePage() {
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+        <OnSaleSection />
+        <BestSellersSection />
+        <ReviewsSection />
       </div>
     </>
   );
 }
-
-    
