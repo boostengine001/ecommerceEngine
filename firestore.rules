@@ -1,0 +1,109 @@
+/**
+ * @description This ruleset enforces a strict user-ownership model for user-specific data (carts, orders, user profiles) and allows public read access to product information.
+ * @dataStructure
+ *  - /products/{productId}: Publicly readable product information.
+ *  - /users/{userId}: User profile data, accessible only to the user.
+ *  - /users/{userId}/cart: The user's shopping cart, accessible only to the user. CartId is the same as userId.
+ *  - /users/{userId}/cart/cartItems/{cartItemId}: Items within the user's cart, accessible only to the user.
+ *  - /users/{userId}/orders/{orderId}: User's order history, accessible only to the user.
+ *  - /users/{userId}/orders/{orderId}/orderItems/{orderItemId}: Items within a specific order, accessible only to the user.
+ * @keySecurityDecisions
+ *  - User data is strictly segregated under /users/{userId} to enforce ownership.
+ *  - Products are publicly readable but writable only through backend processes (not implemented in this ruleset).
+ *  - List operations on user-owned collections are restricted to the owning user.
+ *  - The rules explicitly deny any unauthorized access, defaulting to a secure posture.
+ * @denormalizationForAuthorization No denormalization is required, as ownership is determined by the Firestore path.
+ * @structuralSegregation Public product data is stored separately from private user data.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Allows anyone to read product information, but restricts creation, updates, and deletion.
+     * @path /products/{productId}
+     * @allow (get, list) - Any user can retrieve product information.
+     * @deny (create, update, delete) - No client-side write access to product data.
+     * @principle Allows public read access to products, but restricts write access.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Manages user profile data; only the authenticated user can read, update, or delete their own profile. Allows creating their own profile.
+     * @path /users/{userId}
+     * @allow (create) - If the authenticated user's ID matches the user ID in the path.
+     * @allow (get, update, delete) - If the authenticated user's ID matches the user ID in the path.
+     * @deny (create, get, update, delete) - If the authenticated user's ID does not match the user ID in the path.
+     * @principle Enforces document ownership for user profiles.
+     */
+    match /users/{userId} {
+      allow create: if isSignedIn() && isOwner(userId);
+      allow get, update, delete: if isSignedIn() && isExistingOwner(userId);
+      allow list: if false;
+    }
+
+    /**
+     * @description Manages user's shopping cart; only the authenticated user can read, create, update, or delete their own cart.
+     * @path /users/{userId}/cart
+     * @allow (create, get, update, delete) - If the authenticated user's ID matches the user ID in the path.
+     * @deny (create, get, update, delete) - If the authenticated user's ID does not match the user ID in the path.
+     * @principle Enforces document ownership for carts.
+     */
+    match /users/{userId}/cart {
+      allow create, get, update, delete: if isSignedIn() && isExistingOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+    }
+
+    /**
+     * @description Manages items within the user's shopping cart; only the authenticated user can read, create, update, or delete items in their own cart.
+     * @path /users/{userId}/cart/cartItems/{cartItemId}
+     * @allow (create, get, update, delete) - If the authenticated user's ID matches the user ID in the path.
+     * @deny (create, get, update, delete) - If the authenticated user's ID does not match the user ID in the path.
+     * @principle Enforces document ownership for cart items.
+     */
+    match /users/{userId}/cart/cartItems/{cartItemId} {
+      allow create, get, update, delete: if isSignedIn() && isExistingOwner(userId);
+       allow list: if isSignedIn() && isOwner(userId);
+    }
+
+    /**
+     * @description Manages user's orders; only the authenticated user can read, create, update, or delete their own orders.
+     * @path /users/{userId}/orders/{orderId}
+     * @allow (create, get, update, delete) - If the authenticated user's ID matches the user ID in the path.
+     * @deny (create, get, update, delete) - If the authenticated user's ID does not match the user ID in the path.
+     * @principle Enforces document ownership for orders.
+     */
+    match /users/{userId}/orders/{orderId} {
+      allow create, get, update, delete: if isSignedIn() && isExistingOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+    }
+
+    /**
+     * @description Manages individual items within a user's order; only the authenticated user can read, create, update, or delete items in their own orders.
+     * @path /users/{userId}/orders/{orderId}/orderItems/{orderItemId}
+     * @allow (create, get, update, delete) - If the authenticated user's ID matches the user ID in the path.
+     * @deny (create, get, update, delete) - If the authenticated user's ID does not match the user ID in the path.
+     * @principle Enforces document ownership for order items.
+     */
+    match /users/{userId}/orders/{orderId}/orderItems/{orderItemId} {
+      allow create, get, update, delete: if isSignedIn() && isExistingOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+    }
+  }
+
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+  }
+}
