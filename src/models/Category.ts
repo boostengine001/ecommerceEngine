@@ -24,33 +24,12 @@ const CategorySchema: Schema = new Schema({
   }],
 }, { timestamps: true });
 
-CategorySchema.index({ parent: 1, name: 1 }, { unique: true });
-
-async function createSlug(name: string): Promise<string> {
-    const baseSlug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    let slug = baseSlug;
-    let count = 1;
-    const CategoryModel = models.Category || model<ICategory>('Category');
-
-    let existingCategory = await CategoryModel.findOne({ slug });
-    while (existingCategory && existingCategory._id.toString() !== (this as any)._id.toString()) {
-        slug = `${baseSlug}-${count}`;
-        count++;
-        existingCategory = await CategoryModel.findOne({ slug });
-    }
-    return slug;
-}
 
 CategorySchema.pre<ICategory>('save', async function (next) {
-  if (this.isModified('name') || !this.slug) {
-    this.slug = await createSlug.call(this, this.name);
-  }
-
   if (this.isModified('parent')) {
     if (this.parent) {
       try {
-        const CategoryModel = models.Category || model<ICategory>('Category');
-        const parentCategory = await CategoryModel.findById(this.parent);
+        const parentCategory = await (models.Category || model<ICategory>('Category')).findById(this.parent);
         if (parentCategory) {
           this.ancestors = [
               ...parentCategory.ancestors, 

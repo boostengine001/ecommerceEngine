@@ -18,9 +18,24 @@ async function uploadImage(file: File): Promise<string> {
   }
 }
 
-function createSlug(name: string) {
-    return name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+async function createUniqueSlug(name: string, categoryIdToExclude: string | null = null): Promise<string> {
+    const baseSlug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+    let slug = baseSlug;
+    let count = 1;
+    
+    let query: any = { slug };
+    if (categoryIdToExclude) {
+        query._id = { $ne: categoryIdToExclude };
+    }
+
+    while (await Category.findOne(query)) {
+        slug = `${baseSlug}-${count}`;
+        query.slug = slug;
+        count++;
+    }
+    return slug;
 }
+
 
 export async function addCategory(formData: FormData) {
   await dbConnect();
@@ -35,9 +50,11 @@ export async function addCategory(formData: FormData) {
   }
   
   const imageUrl = await uploadImage(imageFile);
+  const slug = await createUniqueSlug(name);
   
   const newCategory = new Category({
     name,
+    slug,
     description,
     image: imageUrl,
     parent: parentId,
@@ -87,6 +104,10 @@ export async function updateCategory(id: string, formData: FormData) {
   category.image = imageUrl;
   // @ts-ignore
   category.parent = parentId;
+
+  if (name !== category.name || !category.slug) {
+      category.slug = await createUniqueSlug(name, id);
+  }
 
   await category.save();
 
