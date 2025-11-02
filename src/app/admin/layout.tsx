@@ -82,12 +82,12 @@ export default function AdminLayout({
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarContent>
             <SidebarHeader>
                 <div className="flex items-center gap-2">
                     <Button asChild variant="ghost" className="p-0 text-lg font-bold">
-                    <Link href="/admin">Admin Panel</Link>
+                    <Link href="/admin"><span>Admin Panel</span></Link>
                     </Button>
                 </div>
             </SidebarHeader>
@@ -127,16 +127,15 @@ export default function AdminLayout({
                     </SidebarMenuButton>
                  </SidebarMenuItem>
             </SidebarMenu>
-             <Separator className="my-2" />
-          <UserNav />
         </SidebarFooter>
       </Sidebar>
       <main className="flex-1">
-        <header className="flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
-          <div className="md:hidden">
-            <SidebarTrigger />
+        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+          <SidebarTrigger className="sm:hidden" />
+          <div className="flex-1">
+            <h1 className="text-lg font-semibold md:text-xl">{getPageTitle()}</h1>
           </div>
-          <h1 className="text-lg font-semibold md:text-xl">{getPageTitle()}</h1>
+          <UserNav />
         </header>
         <div className="p-4 sm:p-6">{children}</div>
       </main>
