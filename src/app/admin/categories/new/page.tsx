@@ -2,49 +2,53 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { addCategory } from '@/lib/actions/category.actions';
+import { addCategory, getAllCategories } from '@/lib/actions/category.actions';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ImageDropzone from '@/components/admin/image-dropzone';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { ICategory } from '@/models/Category';
 
 export default function NewCategoryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<ICategory[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    async function fetchCategories() {
+        const cats = await getAllCategories();
+        setCategories(cats);
+    }
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
     const formData = new FormData(event.currentTarget);
-    
-    // Check if an image file is present
-    const imageFile = formData.get('image') as File;
-    if (!imageFile || imageFile.size === 0) {
-        // You might want to show a toast or an error message here
+    const image = formData.get('image') as File;
+
+    if (!image || image.size === 0) {
         alert('Please select an image for the category.');
-        setLoading(false);
         return;
     }
+    
+    setLoading(true);
 
     try {
       await addCategory(formData);
       router.push('/admin/categories');
     } catch (error) {
       console.error('Failed to add category:', error);
-      // You could show an error toast here
+      alert('Failed to add category. Please check the console for details.');
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -68,6 +72,20 @@ export default function NewCategoryPage() {
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" placeholder="A short description of the category." required/>
+              </div>
+               <div>
+                <Label htmlFor="parent">Parent Category</Label>
+                 <Select name="parent">
+                    <SelectTrigger id="parent">
+                        <SelectValue placeholder="Select a parent category (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="null">None (Top-level)</SelectItem>
+                        {categories.map(cat => (
+                            <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

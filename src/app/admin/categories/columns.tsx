@@ -66,21 +66,23 @@ export const columns: ColumnDef<ICategory>[] = [
   {
     accessorKey: "description",
     header: "Description",
+    cell: ({ row }) => {
+        const description = row.original.description;
+        return <div className="truncate max-w-xs">{description}</div>
+    }
   },
   {
-    accessorKey: "subcategories",
-    header: "Sub-categories",
+    accessorKey: "parent",
+    header: "Parent Category",
     cell: ({ row }) => {
-        const subcategories = row.original.subcategories;
-        if (!subcategories || subcategories.length === 0) {
-            return <span className="text-muted-foreground">None</span>
+        const parent = row.original.parent as ICategory | null;
+        if (!parent) {
+            return <Badge variant="secondary">Top-Level</Badge>
         }
         return (
-            <div className="flex flex-wrap gap-1">
-                {subcategories.map(sub => (
-                    <Badge key={sub.slug} variant="secondary">{sub.name}</Badge>
-                ))}
-            </div>
+            <Link href={`/admin/categories/${parent._id}/edit`} className="hover:underline">
+                {parent.name}
+            </Link>
         )
     }
   },
