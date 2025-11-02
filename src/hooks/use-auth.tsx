@@ -1,28 +1,24 @@
-
 'use client';
 
 import {
   useState,
-  useEffect,
   createContext,
   useContext,
   type ReactNode,
+  useCallback,
 } from 'react';
-import {
-  getAuth,
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-  type User,
-} from 'firebase/auth';
-import { useFirebase } from '@/firebase';
-import { doc, setDoc, getFirestore } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { login as loginAction, signup as signupAction } from '@/lib/actions/user.actions';
+import type { IUser } from '@/models/User';
+
+// A simplified user object for the client-side context
+export type ClientUser = Omit<IUser, 'password'> & {
+  id: string;
+  displayName: string;
+};
 
 export interface AuthContextType {
-  user: User | null;
+  user: ClientUser | null;
   isUserLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (
@@ -37,59 +33,57 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { app } = useFirebase();
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
   const router = useRouter();
+  const [user, setUser] = useState<ClientUser | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(false);
 
-  const [user, setUser] = useState<User | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+  const login = useCallback(async (email: string, password: string) => {
+    setIsUserLoading(true);
+    try {
+      const loggedInUser = await loginAction({ email, password });
+      const clientUser: ClientUser = {
+        ...loggedInUser,
+        id: loggedInUser._id,
+        displayName: `${loggedInUser.firstName} ${loggedInUser.lastName}`,
+      };
+      setUser(clientUser);
+    } catch (error) {
+      // Re-throw the error to be caught by the form
+      throw error;
+    } finally {
       setIsUserLoading(false);
-    });
-    return () => unsubscribe();
-  }, [auth]);
+    }
+  }, []);
 
-  const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-  };
+  const signup = useCallback(
+    async (
+      firstName: string,
+      lastName: string,
+      email: string,
+      password: string
+    ) => {
+      setIsUserLoading(true);
+      try {
+        const newUser = await signupAction({ firstName, lastName, email, password });
+         const clientUser: ClientUser = {
+          ...newUser,
+          id: newUser._id,
+          displayName: `${newUser.firstName} ${newUser.lastName}`,
+        };
+        setUser(clientUser);
+      } catch (error) {
+        throw error;
+      } finally {
+        setIsUserLoading(false);
+      }
+    },
+    []
+  );
 
-  const signup = async (
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string
-  ) => {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const firebaseUser = userCredential.user;
-
-    await updateProfile(firebaseUser, {
-      displayName: `${firstName} ${lastName}`,
-    });
-
-    await setDoc(doc(firestore, 'users', firebaseUser.uid), {
-      id: firebaseUser.uid,
-      firstName,
-      lastName,
-      email,
-    });
-    
-    // This is to make sure the user object in the context is updated with the new display name
-    const updatedUser = { ...firebaseUser, displayName: `${firstName} ${lastName}` };
-    setUser(updatedUser);
-  };
-
-  const logout = async () => {
-    await signOut(auth);
+  const logout = useCallback(() => {
+    setUser(null);
     router.push('/');
-  };
+  }, [router]);
 
   const value = {
     user,
