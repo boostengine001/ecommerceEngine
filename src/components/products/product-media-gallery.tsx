@@ -6,9 +6,9 @@ import type { ProductMedia } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Card } from '../ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Button } from '../ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface ProductMediaGalleryProps {
   media: ProductMedia[];
@@ -81,6 +81,7 @@ export default function ProductMediaGallery({ media, isOnSale }: ProductMediaGal
               </>
             )}
            </div>
+           {/* The default close button is part of DialogContent, but we can add an explicit one if needed for styling. */}
         </DialogContent>
       </Dialog>
       
