@@ -15,8 +15,8 @@ export default function CategorySection() {
       </div>
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => (
-          <Card key={category.id} className="group overflow-hidden">
-            <Link href={category.href}>
+          <Card key={category.id} className="group flex flex-col overflow-hidden">
+            <Link href={category.href} className="block">
               <CardHeader className="p-0">
                 <div className="relative aspect-video">
                   <Image
@@ -29,25 +29,26 @@ export default function CategorySection() {
                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
               </CardHeader>
-              <div className="p-4">
-                 <h3 className="text-xl font-bold">{category.name}</h3>
-                 <div className="mt-2 flex flex-wrap gap-2">
-                    {category.subcategories.map(sub => (
-                        <Link key={sub.id} href={sub.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                            {sub.name}
-                        </Link>
-                    ))}
-                 </div>
-                 <div className="mt-4 flex items-center font-semibold text-primary">
-                    Shop Now <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                 </div>
-              </div>
             </Link>
+            <div className="flex flex-1 flex-col p-4">
+               <Link href={category.href} className="block">
+                <h3 className="text-xl font-bold">{category.name}</h3>
+               </Link>
+               <div className="mt-2 flex flex-wrap gap-2">
+                  {category.subcategories.map(sub => (
+                      <Link key={sub.id} href={sub.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                          {sub.name}
+                      </Link>
+                  ))}
+               </div>
+               <div className="flex-grow" />
+               <Link href={category.href} className="mt-4 flex items-center font-semibold text-primary">
+                  Shop Now <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+               </Link>
+            </div>
           </Card>
         ))}
       </div>
     </div>
   );
 }
-
-    
