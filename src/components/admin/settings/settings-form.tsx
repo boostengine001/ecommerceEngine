@@ -30,6 +30,7 @@ import type { ISettings } from '@/models/Setting';
 import { updateSettings } from '@/lib/actions/setting.actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import ImageDropzone from '../image-dropzone';
 
 export default function SettingsForm({ settings }: { settings: ISettings }) {
   const { toast } = useToast();
@@ -113,41 +114,47 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="theme">Theme</Label>
-                  <Select name="theme" defaultValue={settings.theme}>
-                    <SelectTrigger id="theme">
-                      <SelectValue placeholder="Select a theme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Logo</Label>
+                  <ImageDropzone name="logo" initialImage={settings.logoUrl} />
                 </div>
-                <div>
-                  <Label htmlFor="font">Font</Label>
-                  <Select name="font" defaultValue={settings.font}>
-                    <SelectTrigger id="font">
-                      <SelectValue placeholder="Select a font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="inter">Inter</SelectItem>
-                      <SelectItem value="space-grotesk">Space Grotesk</SelectItem>
-                      <SelectItem value="system-sans">System Sans-serif</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-6">
+                   <div>
+                    <Label>Primary Color</Label>
+                    <div className="flex items-center gap-2">
+                        <Input id="primaryColor" name="primaryColor" type="color" defaultValue={settings.primaryColor} className="h-10 w-14 p-1"/>
+                        <Input type="text" defaultValue={settings.primaryColor} onChange={e => (document.getElementById('primaryColor') as HTMLInputElement).value = e.target.value } className="max-w-xs" />
+                    </div>
+                   </div>
+                   <div>
+                    <Label htmlFor="theme">Theme</Label>
+                    <Select name="theme" defaultValue={settings.theme}>
+                        <SelectTrigger id="theme">
+                        <SelectValue placeholder="Select a theme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="system">System</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div>
+                    <Label htmlFor="font">Font</Label>
+                    <Select name="font" defaultValue={settings.font}>
+                        <SelectTrigger id="font">
+                        <SelectValue placeholder="Select a font" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="inter">Inter</SelectItem>
+                        <SelectItem value="space-grotesk">Space Grotesk</SelectItem>
+                        <SelectItem value="system-sans">System Sans-serif</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
                 </div>
               </div>
-               <div>
-                <Label>Primary Color</Label>
-                <div className="flex items-center gap-2">
-                    <Input id="primaryColor" name="primaryColor" type="color" defaultValue={settings.primaryColor} className="h-10 w-14 p-1"/>
-                    <Input type="text" defaultValue={settings.primaryColor} onChange={e => (document.getElementById('primaryColor') as HTMLInputElement).value = e.target.value } className="max-w-xs" />
-                </div>
-               </div>
             </CardContent>
              <CardFooter className="border-t px-6 py-4">
               <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</Button>

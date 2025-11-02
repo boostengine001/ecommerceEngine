@@ -8,6 +8,7 @@ export interface ISettings extends Document {
   theme: 'light' | 'dark' | 'system';
   font: string;
   primaryColor: string;
+  logoUrl: string;
 }
 
 const SettingsSchema: Schema = new Schema({
@@ -17,6 +18,7 @@ const SettingsSchema: Schema = new Schema({
   theme: { type: String, enum: ['light', 'dark', 'system'], default: 'light' },
   font: { type: String, default: 'inter' },
   primaryColor: { type: String, default: '#2563eb' },
+  logoUrl: { type: String, default: '' },
 }, { timestamps: true });
 
 export default models.Setting || model<ISettings>('Setting', SettingsSchema);

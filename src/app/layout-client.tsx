@@ -7,8 +7,12 @@ import { useMemo } from 'react';
 
 export default function RootLayoutClient({
   children,
+  logoUrl,
+  storeName,
 }: {
   children: React.ReactNode;
+  logoUrl: string;
+  storeName: string;
 }) {
   const pathname = usePathname();
 
@@ -26,7 +30,7 @@ export default function RootLayoutClient({
 
   return (
     <div className="flex min-h-full flex-col">
-      <Header />
+      <Header logoUrl={logoUrl} storeName={storeName} />
       <main className="flex-1">{children}</main>
       <Footer />
     </div>
