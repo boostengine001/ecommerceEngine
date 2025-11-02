@@ -6,6 +6,7 @@ export type Product = {
   salePrice?: number;
   image: string;
   imageHint: string;
+  category: string;
 };
 
 export type CartItem = {
