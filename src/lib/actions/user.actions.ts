@@ -1,7 +1,8 @@
+
 'use server';
 
 import dbConnect from '../db';
-import User from '@/models/User';
+import User, { type IUser } from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
@@ -57,7 +58,7 @@ export async function login(data: unknown) {
 
     await dbConnect();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
         throw new Error('Invalid email or password.');
     }
@@ -70,4 +71,10 @@ export async function login(data: unknown) {
     const userObject = user.toObject();
     delete userObject.password;
     return JSON.parse(JSON.stringify(userObject));
+}
+
+export async function getUsers(): Promise<IUser[]> {
+    await dbConnect();
+    const users = await User.find({}).sort({ createdAt: -1 });
+    return JSON.parse(JSON.stringify(users));
 }
