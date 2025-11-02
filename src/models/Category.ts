@@ -18,11 +18,12 @@ const CategorySchema: Schema = new Schema({
   description: { type: String, required: [true, 'Category description is required.'], trim: true },
   parent: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
   ancestors: [{ 
-    _id: { type: Schema.Types.ObjectId, ref: 'Category' },
-    name: String,
-    slug: String,
+    _id: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
+    name: { type: String, required: true },
+    slug: { type: String, required: true },
   }],
 }, { timestamps: true });
+
 
 // Ensure that for a given parent, the category name is unique.
 CategorySchema.index({ parent: 1, name: 1 }, { unique: true });
@@ -31,8 +32,8 @@ async function createSlug(name: string): Promise<string> {
     const baseSlug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
     let slug = baseSlug;
     let count = 1;
-    // `this.constructor` refers to the model
-    while (await (this as any).constructor.findOne({ slug })) {
+    const model = this.constructor as mongoose.Model<ICategory>;
+    while (await model.findOne({ slug })) {
         slug = `${baseSlug}-${count}`;
         count++;
     }
@@ -47,7 +48,7 @@ CategorySchema.pre<ICategory>('save', async function (next) {
 
   if (this.isModified('parent')) {
     if (this.parent) {
-      const parentCategory = await mongoose.model('Category').findById(this.parent) as ICategory;
+      const parentCategory = await mongoose.model<ICategory>('Category').findById(this.parent);
       if (parentCategory) {
         this.ancestors = [
             ...parentCategory.ancestors, 
