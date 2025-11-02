@@ -32,17 +32,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function AdminCustomersPage() {
   const firestore = useFirestore();
   const usersCollection = useMemoFirebase(
-    () => collection(firestore, 'users'),
+    () => (firestore ? collection(firestore, 'users') : null),
     [firestore]
   );
   const { data: users, isLoading } = useCollection<UserProfile>(usersCollection);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
 
   return (
     <div className="space-y-6">

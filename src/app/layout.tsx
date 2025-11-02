@@ -4,6 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/hooks/use-cart';
 import { cn } from '@/lib/utils';
 import RootLayoutClient from './layout-client';
+import { FirebaseClientProvider } from '@/firebase';
+import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
   title: 'BlueCart',
@@ -23,10 +25,14 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('h-full font-body antialiased')}>
+        <FirebaseClientProvider>
+          <AuthProvider>
             <CartProvider>
               <RootLayoutClient>{children}</RootLayoutClient>
               <Toaster />
             </CartProvider>
+          </AuthProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
