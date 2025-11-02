@@ -8,8 +8,14 @@ import { useCart } from '@/hooks/use-cart';
 import { CartSheet } from '@/components/cart/cart-sheet';
 import { UserNav } from '../auth/user-nav';
 import { useWishlist } from '@/hooks/use-wishlist';
+import Image from 'next/image';
 
-export default function Header() {
+interface HeaderProps {
+    logoUrl: string;
+    storeName: string;
+}
+
+export default function Header({ logoUrl, storeName }: HeaderProps) {
   const { totalItems: totalCartItems } = useCart();
   const { totalItems: totalWishlistItems } = useWishlist();
 
@@ -17,8 +23,14 @@ export default function Header() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <ShoppingBag className="h-6 w-6 text-primary" />
-          <span className="font-headline text-2xl font-bold text-primary">BlueCart</span>
+           {logoUrl ? (
+            <Image src={logoUrl} alt={storeName} width={120} height={40} className="h-10 w-auto" />
+          ) : (
+            <>
+              <ShoppingBag className="h-6 w-6 text-primary" />
+              <span className="font-headline text-2xl font-bold text-primary">{storeName}</span>
+            </>
+          )}
         </Link>
         
         <div className="hidden flex-1 justify-center md:flex">

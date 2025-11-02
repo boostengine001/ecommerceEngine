@@ -13,61 +13,39 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { deleteCategory } from '@/lib/actions/category.actions';
+import { deleteProduct } from '@/lib/actions/product.actions';
 import { cn } from '@/lib/utils';
-import type { VariantProps } from 'class-variance-authority';
 import { Trash2 } from 'lucide-react';
 import React from 'react';
 
-interface DeleteCategoryButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+interface DeleteProductButtonProps {
   id: string;
-  children?: React.ReactNode;
 }
 
-export default function DeleteCategoryButton({
-  id,
-  variant,
-  className,
-  children,
-  ...props
-}: DeleteCategoryButtonProps) {
-  const [isClient, setIsClient] = React.useState(false);
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
+export default function DeleteProductButton({ id }: DeleteProductButtonProps) {
   
   const handleDelete = async () => {
     try {
-      await deleteCategory(id);
+      await deleteProduct(id);
     } catch (error) {
-      console.error("Failed to delete category:", error);
-      // Optionally, show a toast notification on error
+      console.error("Failed to delete product:", error);
+      alert("Failed to delete product. See console for details.");
     }
   };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <button className={cn(buttonVariants({ variant, className }))} {...props}>
-          {children || (
-            <>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </>
-          )}
+        <button className={cn(buttonVariants({ variant: "ghost" }), "w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive")}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
         </button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the category and all of its subcategories.
+            This action cannot be undone. This will permanently delete the product from the database.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

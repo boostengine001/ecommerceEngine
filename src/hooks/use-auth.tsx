@@ -1,98 +1,102 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import {
+  useState,
+  createContext,
+  useContext,
+  type ReactNode,
+  useCallback,
+} from 'react';
+import { useRouter } from 'next/navigation';
+import { login as loginAction, signup as signupAction } from '@/lib/actions/user.actions';
+import type { IUser } from '@/models/User';
 
-// This is a mock user type. In a real app, this would be more detailed.
-interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL?: string | null;
-}
+// A simplified user object for the client-side context
+export type ClientUser = Omit<IUser, 'password'> & {
+  id: string;
+  displayName: string;
+};
 
-interface AuthContextType {
-  user: User | null;
+export interface AuthContextType {
+  user: ClientUser | null;
   isUserLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
+  signup: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MOCK_USER: User = {
-    uid: 'mock-user-id',
-    email: 'test@example.com',
-    displayName: 'Test User',
-    photoURL: 'https://i.pravatar.cc/150?u=test-user'
-}
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const [user, setUser] = useState<ClientUser | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(false);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate checking for a logged-in user from a session
-    setTimeout(() => {
-        // To test the logged-out state, set this to null
-        // setUser(MOCK_USER); 
-        setUser(null);
-        setIsUserLoading(false);
-    }, 1000);
+  const login = useCallback(async (email: string, password: string) => {
+    setIsUserLoading(true);
+    try {
+      const loggedInUser = await loginAction({ email, password });
+      const clientUser: ClientUser = {
+        ...loggedInUser,
+        id: loggedInUser._id,
+        displayName: `${loggedInUser.firstName} ${loggedInUser.lastName}`,
+      };
+      setUser(clientUser);
+    } catch (error) {
+      // Re-throw the error to be caught by the form
+      throw error;
+    } finally {
+      setIsUserLoading(false);
+    }
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
-    setIsUserLoading(true);
-    // Simulate API call
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            if (password === 'password') {
-                const loggedInUser: User = { ...MOCK_USER, email: email, displayName: email.split('@')[0] }
-                setUser(loggedInUser);
-                setIsUserLoading(false);
-                resolve();
-            } else {
-                setIsUserLoading(false);
-                reject(new Error('Invalid email or password'));
-            }
-        }, 1500);
-    });
-  };
-
-  const signup = async (firstName: string, lastName: string, email: string, password: string): Promise<void> => {
-     setIsUserLoading(true);
-     // Simulate API call
-     return new Promise((resolve) => {
-         setTimeout(() => {
-            const newUser: User = { 
-                uid: `mock-user-${Date.now()}`,
-                email: email, 
-                displayName: `${firstName} ${lastName}` 
-            };
-            setUser(newUser);
-            setIsUserLoading(false);
-            resolve();
-         }, 1500);
-     });
-  };
-
-  const logout = () => {
-    setIsUserLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-        setUser(null);
+  const signup = useCallback(
+    async (
+      firstName: string,
+      lastName: string,
+      email: string,
+      password: string
+    ) => {
+      setIsUserLoading(true);
+      try {
+        const newUser = await signupAction({ firstName, lastName, email, password });
+         const clientUser: ClientUser = {
+          ...newUser,
+          id: newUser._id,
+          displayName: `${newUser.firstName} ${newUser.lastName}`,
+        };
+        setUser(clientUser);
+      } catch (error) {
+        throw error;
+      } finally {
         setIsUserLoading(false);
-    }, 500);
+      }
+    },
+    []
+  );
+
+  const logout = useCallback(() => {
+    setUser(null);
+    router.push('/');
+  }, [router]);
+
+  const value = {
+    user,
+    isUserLoading,
+    login,
+    signup,
+    logout,
   };
 
-  return (
-    <AuthContext.Provider value={{ user, isUserLoading, login, signup, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

@@ -17,9 +17,10 @@ export default function NewCategoryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<ICategory[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     async function fetchCategories() {
         const cats = await getAllCategories();
         setCategories(cats);
@@ -58,52 +59,54 @@ export default function NewCategoryPage() {
           <p className="text-muted-foreground">Fill in the details for the new category.</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Category Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="name">Category Name</Label>
-                <Input id="name" name="name" placeholder="e.g. Menswear" required/>
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" placeholder="A short description of the category." required/>
-              </div>
-               <div>
-                <Label htmlFor="parent">Parent Category</Label>
-                 <Select name="parent">
-                    <SelectTrigger id="parent">
-                        <SelectValue placeholder="Select a parent category (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="null">None (Top-level)</SelectItem>
-                        {categories.map(cat => (
-                            <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="space-y-6">
+      {isClient && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
             <Card>
-                <CardHeader>
-                <CardTitle>Category Image</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ImageDropzone name="image" />
-                </CardContent>
+              <CardHeader>
+                <CardTitle>Category Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Category Name</Label>
+                  <Input id="name" name="name" placeholder="e.g. Menswear" required/>
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" name="description" placeholder="A short description of the category." required/>
+                </div>
+                <div>
+                  <Label htmlFor="parent">Parent Category</Label>
+                  <Select name="parent" defaultValue="null">
+                      <SelectTrigger id="parent">
+                          <SelectValue placeholder="Select a parent category (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="null">None (Top-level)</SelectItem>
+                          {categories.map(cat => (
+                              <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
             </Card>
-            <Button size="lg" type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Category'}
-            </Button>
+          </div>
+          <div className="space-y-6">
+              <Card>
+                  <CardHeader>
+                  <CardTitle>Category Image</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <ImageDropzone name="image" />
+                  </CardContent>
+              </Card>
+              <Button size="lg" type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Category'}
+              </Button>
+          </div>
         </div>
-      </div>
+      )}
     </form>
   );
 }

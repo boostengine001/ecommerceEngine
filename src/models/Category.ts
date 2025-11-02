@@ -1,5 +1,20 @@
+import mongoose, { Schema, Document, models, model } from 'mongoose';
 
-import mongoose, { Schema, Document } from 'mongoose';
+// --- TEMPORARY INDEX DROP ---
+// This will be removed in the next step.
+const tempSchema = new Schema({}, { strict: false });
+tempSchema.index({ 'subcategories.slug': 1 }, { unique: false });
+const TempModel = models.Category || model('Category', tempSchema);
+TempModel.collection.dropIndex('subcategories.slug_1', function(err, result) {
+    if (err) {
+        // This is expected if the index doesn't exist, so we can ignore the error.
+        // console.log('Error dropping index (may not exist, which is OK):', err);
+    } else {
+        // console.log('Successfully dropped index:', result);
+    }
+});
+// --- END TEMPORARY INDEX DROP ---
+
 
 export interface ICategory extends Document {
   _id: string;
@@ -25,35 +40,24 @@ const CategorySchema: Schema = new Schema({
 }, { timestamps: true });
 
 
-// Ensure that for a given parent, the category name is unique.
-CategorySchema.index({ parent: 1, name: 1 }, { unique: true });
-
-async function createSlug(name: string): Promise<string> {
-    const baseSlug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    let slug = baseSlug;
-    let count = 1;
-    const model = this.constructor as mongoose.Model<ICategory>;
-    while (await model.findOne({ slug })) {
-        slug = `${baseSlug}-${count}`;
-        count++;
-    }
-    return slug;
-}
-
-// Pre-save hook to generate slug and ancestors
 CategorySchema.pre<ICategory>('save', async function (next) {
-  if (this.isModified('name') || !this.slug) {
-    this.slug = await createSlug.call(this, this.name);
-  }
-
   if (this.isModified('parent')) {
     if (this.parent) {
-      const parentCategory = await mongoose.model<ICategory>('Category').findById(this.parent);
-      if (parentCategory) {
-        this.ancestors = [
-            ...parentCategory.ancestors, 
-            { _id: parentCategory._id, name: parentCategory.name, slug: parentCategory.slug }
-        ];
+      try {
+        const parentCategory = await (models.Category || model<ICategory>('Category')).findById(this.parent);
+        if (parentCategory) {
+          this.ancestors = [
+              ...parentCategory.ancestors, 
+              { _id: parentCategory._id, name: parentCategory.name, slug: parentCategory.slug }
+          ];
+        } else {
+            this.parent = null;
+            this.ancestors = [];
+        }
+      } catch (error) {
+          console.error("Error fetching parent category:", error);
+          this.parent = null;
+          this.ancestors = [];
       }
     } else {
       this.ancestors = [];
@@ -62,4 +66,4 @@ CategorySchema.pre<ICategory>('save', async function (next) {
   next();
 });
 
-export default mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
+export default models.Category || model<ICategory>('Category', CategorySchema);

@@ -1,4 +1,4 @@
-'use client';
+
 import {
   Card,
   CardContent,
@@ -24,39 +24,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { UserProfile } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useState, useEffect } from 'react';
+import { getUsers } from '@/lib/actions/user.actions';
+import type { IUser } from '@/models/User';
 
-const staticUsers: UserProfile[] = [
-    {
-        id: "1",
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@example.com",
-        phoneNumber: "123-456-7890",
-    },
-    {
-        id: "2",
-        firstName: "Jane",
-        lastName: "Smith",
-        email: "jane.smith@example.com",
-        phoneNumber: "098-765-4321",
-    }
-]
-
-export default function AdminCustomersPage() {
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate fetching data
-    setTimeout(() => {
-        setUsers(staticUsers);
-        setIsLoading(false);
-    }, 1000);
-  }, []);
-
+export default async function AdminCustomersPage() {
+  const users = await getUsers();
 
   return (
     <div className="space-y-6">
@@ -79,51 +51,24 @@ export default function AdminCustomersPage() {
               <TableRow>
                 <TableHead>Customer</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Phone Number</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <>
-                  {[...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="h-8 w-8 rounded-full" />
-                          <Skeleton className="h-4 w-[100px]" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[150px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[120px]" />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end">
-                          <Skeleton className="h-8 w-8" />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
-              )}
-              {!isLoading && users && users.map((user) => (
-                <TableRow key={user.id}>
+              {users && users.map((user: IUser) => (
+                <TableRow key={user._id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={`https://i.pravatar.cc/40?u=${user.email || user.id}`} alt={`${user.firstName} ${user.lastName}`} />
+                        <AvatarImage src={`https://i.pravatar.cc/40?u=${user.email}`} alt={`${user.firstName} ${user.lastName}`} />
                         <AvatarFallback>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <span>{user.firstName} {user.lastName}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{user.email || 'N/A'}</TableCell>
-                  <TableCell>{user.phoneNumber}</TableCell>
+                  <TableCell>{user.email}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -143,7 +88,7 @@ export default function AdminCustomersPage() {
               ))}
             </TableBody>
           </Table>
-           {!isLoading && (!users || users.length === 0) && (
+           {(!users || users.length === 0) && (
               <div className="py-10 text-center text-muted-foreground">
                 No customers found.
               </div>

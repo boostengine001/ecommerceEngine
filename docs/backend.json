@@ -114,10 +114,6 @@
           "description": "User's email address.",
           "format": "email"
         },
-        "password": {
-          "type": "string",
-          "description": "User's password (hashed)."
-        },
         "shippingAddress": {
           "type": "string",
           "description": "User's shipping address."
@@ -131,8 +127,7 @@
         "id",
         "firstName",
         "lastName",
-        "email",
-        "password"
+        "email"
       ]
     },
     "Order": {
@@ -216,8 +211,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {

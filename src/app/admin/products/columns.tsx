@@ -1,6 +1,7 @@
 
 "use client"
 
+import type { IProduct } from "@/models/Product";
 import type { ICategory } from "@/models/Category";
 import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
@@ -17,10 +18,17 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import Link from "next/link";
-import DeleteCategoryButton from "@/components/admin/categories/delete-category-button";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
+import DeleteProductButton from "./delete-product-button";
 
-export const columns: ColumnDef<ICategory>[] = [
+const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+};
+
+export const columns: ColumnDef<IProduct>[] = [
     {
     id: "select",
     header: ({ table }) => (
@@ -47,49 +55,74 @@ export const columns: ColumnDef<ICategory>[] = [
     accessorKey: "name",
     header: ({ column }) => {
       return (
-        <DataTableColumnHeader column={column} title="Category" />
+        <DataTableColumnHeader column={column} title="Product" />
       )
     },
     cell: ({ row }) => {
-        const category = row.original;
+        const product = row.original;
+        const imageUrl = product.media && product.media.length > 0 ? product.media[0].url : '/placeholder.svg';
         return (
             <div className="flex items-center gap-4">
-                <Image src={category.image} alt={category.name} width={40} height={40} className="rounded-md object-cover" />
+                <Image src={imageUrl} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
                 <div className="flex flex-col">
-                    <span className="font-medium">{category.name}</span>
-                    <span className="text-sm text-muted-foreground">/{category.slug}</span>
+                    <span className="font-medium">{product.name}</span>
+                    <span className="text-sm text-muted-foreground">/{product.slug}</span>
                 </div>
             </div>
         )
     }
   },
   {
-    accessorKey: "description",
-    header: "Description",
+    accessorKey: "price",
+    header: ({ column }) => {
+      return (
+        <DataTableColumnHeader column={column} title="Price" />
+      )
+    },
     cell: ({ row }) => {
-        const description = row.original.description;
-        return <div className="truncate max-w-xs">{description}</div>
+        const product = row.original;
+        return (
+            <div className="flex flex-col">
+                {product.salePrice ? (
+                    <>
+                        <span className="font-bold text-destructive">{formatPrice(product.salePrice)}</span>
+                        <span className="text-xs text-muted-foreground line-through">{formatPrice(product.price)}</span>
+                    </>
+                ) : (
+                    <span>{formatPrice(product.price)}</span>
+                )}
+            </div>
+        )
     }
   },
   {
-    accessorKey: "parent",
-    header: "Parent Category",
+    accessorKey: "category",
+    header: "Category",
     cell: ({ row }) => {
-        const parent = row.original.parent as ICategory | null;
-        if (!parent) {
-            return <Badge variant="secondary">Top-Level</Badge>
+        const category = row.original.category as ICategory;
+        if (!category) {
+            return <Badge variant="secondary">Uncategorized</Badge>
         }
         return (
-            <Link href={`/admin/categories/${parent._id}/edit`} className="hover:underline">
-                {parent.name}
-            </Link>
+            <Badge variant="outline">{category.name}</Badge>
         )
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id))
+    },
+  },
+  {
+    accessorKey: "isActive",
+    header: "Status",
+    cell: ({ row }) => {
+        const isActive = row.original.isActive;
+        return <Badge variant={isActive ? 'default' : 'destructive'}>{isActive ? 'Active' : 'Archived'}</Badge>
     }
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const category = row.original
+      const product = row.original
  
       return (
         <div className="flex items-center justify-end gap-2">
@@ -103,11 +136,14 @@ export const columns: ColumnDef<ICategory>[] = [
             <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem asChild>
-                    <Link href={`/admin/categories/${category._id}/edit`}>Edit</Link>
+                    <Link href={`/admin/products/${product._id}/edit`}>Edit</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href={`/products/${product.slug}`} target="_blank">View</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteCategoryButton id={category._id} variant="ghost" className="w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive" />
+                    <DeleteProductButton id={product._id} />
                 </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>

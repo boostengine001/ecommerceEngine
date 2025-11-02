@@ -66,20 +66,6 @@ export default function AdminLayout({
     },
   ];
 
-  const getPageTitle = () => {
-    if (pathname === '/admin') return 'Dashboard';
-    const currentItem = menuItems.find(item => pathname.startsWith(item.href) && item.href !== '/admin');
-    if (currentItem) return currentItem.label;
-    
-    if (pathname.startsWith('/admin/orders/')) return 'Order Details';
-    if (pathname.startsWith('/admin/products/new')) return 'New Product';
-    if (pathname.startsWith('/admin/categories/new')) return 'New Category';
-    if (pathname.startsWith('/admin/settings')) return 'Settings';
-
-    return 'Admin';
-  }
-
-
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
@@ -132,9 +118,7 @@ export default function AdminLayout({
       <main className="flex-1">
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
           <SidebarTrigger className="sm:hidden" />
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold md:text-xl">{getPageTitle()}</h1>
-          </div>
+          <div className="flex-1" />
           <UserNav />
         </header>
         <div className="p-4 sm:p-6">{children}</div>

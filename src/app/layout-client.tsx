@@ -1,30 +1,38 @@
+
 'use client';
 
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
+import type { ISettings } from '@/models/Setting';
 
 export default function RootLayoutClient({
   children,
+  settings,
 }: {
   children: React.ReactNode;
+  settings: ISettings;
 }) {
   const pathname = usePathname();
 
-  const isFullScreenPage = useMemo(() => {
-    return pathname.startsWith('/admin') || pathname === '/login' || pathname === '/signup';
+  const isAuthPage = useMemo(() => {
+    return pathname === '/login' || pathname === '/signup';
   }, [pathname]);
 
-  if (isFullScreenPage) {
+  const isAdminPage = useMemo(() => {
+    return pathname.startsWith('/admin');
+  }, [pathname]);
+
+  if (isAuthPage || isAdminPage) {
     return <>{children}</>;
   }
 
   return (
     <div className="flex min-h-full flex-col">
-      <Header />
+      <Header logoUrl={settings.logoUrl} storeName={settings.storeName} />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer settings={settings} />
     </div>
   );
 }

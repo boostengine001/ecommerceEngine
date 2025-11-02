@@ -15,11 +15,13 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart';
 import { orders } from '@/lib/orders';
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { useMemo } from 'react';
-import type { Order } from '@/lib/types';
 import { DollarSign, Package, Users, ShoppingCart } from 'lucide-react';
-import { products } from '@/lib/products';
+import { getProducts } from '@/lib/actions/product.actions';
+import type { IProduct } from '@/models/Product';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const chartConfig = {
   revenue: {
@@ -33,7 +35,23 @@ const chartConfig = {
 };
 
 export default function AnalyticsPage() {
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProducts() {
+        const prods = await getProducts();
+        setProducts(prods);
+        setLoading(false);
+    }
+    fetchProducts();
+  }, []);
+
   const { monthlyRevenue, totalRevenue, totalOrders, totalCustomers, topSellingProducts } = useMemo(() => {
+    if (loading) {
+      return { monthlyRevenue: [], totalRevenue: 0, totalOrders: 0, totalCustomers: 0, topSellingProducts: [] };
+    }
+
     const monthlyRevenueMap = new Map<string, number>();
     let totalRevenue = 0;
     const customerEmails = new Set<string>();
@@ -71,7 +89,7 @@ export default function AnalyticsPage() {
       totalCustomers: customerEmails.size,
       topSellingProducts,
     };
-  }, []);
+  }, [loading]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -86,6 +104,26 @@ export default function AnalyticsPage() {
     { title: 'Total Customers', value: totalCustomers.toString(), icon: Users },
     { title: 'Total Products', value: products.length.toString(), icon: Package },
   ];
+
+  if (loading) {
+      return (
+          <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">Analytics</h2>
+                  <p className="text-muted-foreground">Get insights into your store's performance.</p>
+                </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {[...Array(4)].map((_, i) => <Card key={i}><CardHeader><Skeleton className="h-4 w-2/3" /></CardHeader><CardContent><Skeleton className="h-8 w-1/2"/></CardContent></Card>)}
+            </div>
+             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                 <Card><CardHeader><Skeleton className="h-6 w-1/2"/></CardHeader><CardContent><Skeleton className="h-[250px] w-full" /></CardContent></Card>
+                 <Card><CardHeader><Skeleton className="h-6 w-1/2"/></CardHeader><CardContent><Skeleton className="h-[250px] w-full" /></CardContent></Card>
+            </div>
+          </div>
+      )
+  }
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,9 @@
+
 import type { Product, ProductMedia } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import type { IProduct } from '@/models/Product';
+import { getProducts } from './actions/product.actions';
+
 
 type ProductData = Omit<Product, 'media'> & { mediaIds: string[] };
 
@@ -147,49 +151,54 @@ const productDetails: ProductData[] = [
     id: 'running-shoes', 
     name: 'Velocity Runners', 
     description: 'Lightweight and responsive running shoes designed for speed and comfort. Ideal for road running and marathons.', 
-    price: 119.99, 
+    price: 119.99,
     category: 'fashion',
     mediaIds: ['running-shoes', 'running-shoes-2', 'running-shoes-3'],
-    highlights: [
-        'Ultra-lightweight foam sole',
-        'Breathable knit upper',
-        'High-traction outsole',
+     highlights: [
+        'Ultra-lightweight foam midsole',
+        'Breathable engineered mesh upper',
+        'Durable rubber outsole for traction',
         '8mm heel-to-toe drop'
     ],
     specifications: {
-        'Best For': 'Road Running',
-        'Cushioning': 'Medium',
-        'Weight (per shoe)': '8.5 oz'
+        'Type': 'Neutral',
+        'Weight': '8.5 oz (Men\'s size 9)',
+        'Use': 'Road Running, Racing',
     }
   }
 ];
 
-export const products: Product[] = productDetails.map(detail => {
-  const mediaItems: ProductMedia[] = detail.mediaIds.map(id => {
-    const placeholder = PlaceHolderImages.find(p => p.id === id);
-    if (!placeholder) {
-      throw new Error(`Placeholder image not found for media id: ${id}`);
+// Helper function to create the full Product object with media
+function createProduct(productData: ProductData): Product {
+    const media = productData.mediaIds.map(id => {
+      const placeholder = PlaceHolderImages.find(p => p.id === id);
+      if (!placeholder) {
+        throw new Error(`Placeholder image not found for id: ${id}`);
+      }
+      return { 
+        type: 'image' as 'image' | 'video', 
+        url: placeholder.imageUrl, 
+        alt: placeholder.description,
+        imageHint: placeholder.imageHint,
+      };
+    });
+
+    const mainImagePlaceholder = PlaceHolderImages.find(p => p.id === productData.mediaIds[0]);
+    if (!mainImagePlaceholder) {
+        throw new Error(`Main placeholder image not found for id: ${productData.mediaIds[0]}`);
     }
+
     return {
-      type: 'image',
-      url: placeholder.imageUrl,
-      alt: placeholder.description,
-      imageHint: placeholder.imageHint
+        ...productData,
+        image: mainImagePlaceholder.imageUrl,
+        imageHint: mainImagePlaceholder.imageHint,
+        media
     };
-  });
+}
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { mediaIds, ...rest } = detail;
-  
-  return {
-    ...rest,
-    media: mediaItems,
-    image: mediaItems[0].url,
-    imageHint: mediaItems[0].imageHint
-  };
-});
 
-export const getProductById = (id: string): Product | undefined => {
-  return products.find(p => p.id === id);
-};
-    
+export const products: Product[] = productDetails.map(createProduct);
+
+export function getProductById(id: string): Product | undefined {
+    return products.find(p => p.id === id);
+}

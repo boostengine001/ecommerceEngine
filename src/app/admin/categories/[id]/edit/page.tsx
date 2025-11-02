@@ -15,6 +15,7 @@ import ImageDropzone from '@/components/admin/image-dropzone';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function EditCategoryPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [category, setCategory] = useState<ICategory | null>(null);
   const [allCategories, setAllCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
   useEffect(() => {
     async function fetchData() {
       const [cat, allCats] = await Promise.all([
-        getCategory(params.id),
+        getCategory(id),
         getAllCategories()
       ]);
       setCategory(cat);
@@ -32,7 +33,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
       setAllCategories(allCats.filter(c => c._id !== cat?._id && !c.ancestors.some(a => a._id === cat?._id)));
     }
     fetchData();
-  }, [params.id]);
+  }, [id]);
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,7 +41,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
     const formData = new FormData(event.currentTarget);
     
     try {
-        await updateCategory(params.id, formData);
+        await updateCategory(id, formData);
         router.push('/admin/categories');
     } catch (error) {
         console.error('Failed to update category:', error);
