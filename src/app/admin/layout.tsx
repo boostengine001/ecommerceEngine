@@ -18,11 +18,13 @@ import {
   Users,
   LineChart,
   Tag,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { UserNav } from '@/components/auth/user-nav';
+import { Separator } from '@/components/ui/separator';
 
 export default function AdminLayout({
   children,
@@ -64,23 +66,37 @@ export default function AdminLayout({
     },
   ];
 
+  const getPageTitle = () => {
+    if (pathname === '/admin') return 'Dashboard';
+    const currentItem = menuItems.find(item => pathname.startsWith(item.href) && item.href !== '/admin');
+    if (currentItem) return currentItem.label;
+    
+    if (pathname.startsWith('/admin/orders/')) return 'Order Details';
+    if (pathname.startsWith('/admin/products/new')) return 'New Product';
+    if (pathname.startsWith('/admin/categories/new')) return 'New Category';
+
+    return 'Admin';
+  }
+
+
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" className="p-0 text-lg font-bold">
-              <Link href="/admin">Admin Panel</Link>
-            </Button>
-          </div>
-        </SidebarHeader>
         <SidebarContent>
+            <SidebarHeader>
+                <div className="flex items-center gap-2">
+                    <Button asChild variant="ghost" className="p-0 text-lg font-bold">
+                    <Link href="/admin">Admin Panel</Link>
+                    </Button>
+                </div>
+            </SidebarHeader>
+             <Separator className="my-2" />
           <SidebarMenu>
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname.startsWith(item.href) && (item.href === '/admin' ? pathname === item.href : true)}
+                  isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/admin')}
                   tooltip={{
                     children: item.label,
                   }}
@@ -95,19 +111,33 @@ export default function AdminLayout({
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
+             <Separator className="my-2" />
+            <SidebarMenu>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        tooltip={{ children: "Settings" }}
+                        disabled
+                    >
+                    <Link href="/admin/settings">
+                        <Settings />
+                        <span>Settings</span>
+                    </Link>
+                    </SidebarMenuButton>
+                 </SidebarMenuItem>
+            </SidebarMenu>
+             <Separator className="my-2" />
           <UserNav />
         </SidebarFooter>
       </Sidebar>
       <main className="flex-1">
-        <header className="flex h-14 items-center justify-between border-b bg-background px-4">
+        <header className="flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
           <div className="md:hidden">
             <SidebarTrigger />
           </div>
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-          </div>
+          <h1 className="text-lg font-semibold md:text-xl">{getPageTitle()}</h1>
         </header>
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </main>
     </SidebarProvider>
   );
