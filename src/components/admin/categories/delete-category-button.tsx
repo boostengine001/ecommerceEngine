@@ -1,14 +1,22 @@
 
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { deleteCategory } from '@/lib/actions/category.actions';
+import { cn } from '@/lib/utils';
+import type { VariantProps } from 'class-variance-authority';
 
-export default function DeleteCategoryButton({ id }: { id: string }) {
+interface DeleteCategoryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+    id: string;
+}
+
+export default function DeleteCategoryButton({ id, variant, className, ...props }: DeleteCategoryButtonProps) {
   return (
-    <Button variant="destructive" onClick={async () => {
-      await deleteCategory(id);
-    }}>
+    <Button variant={variant || "destructive"} className={cn(className)} onClick={async () => {
+      if(confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+        await deleteCategory(id);
+      }
+    }} {...props}>
       Delete
     </Button>
   );
