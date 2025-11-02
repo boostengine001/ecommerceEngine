@@ -56,7 +56,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = categoryProducts.filter((product) => {
       const price = product.salePrice ?? product.price;
-      const isInPriceRange = price >= priceRange[0] && price <= price_range[1];
+      const isInPriceRange = price >= priceRange[0] && price <= priceRange[1];
       const isOnSale = onSaleOnly ? !!product.salePrice : true;
       return isInPriceRange && isOnSale;
     });
