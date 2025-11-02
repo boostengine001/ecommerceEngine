@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import ProductRecommendations from '@/components/products/product-recommendations';
 import AddToCartButton from '@/components/products/add-to-cart-button';
+import WishlistButton from '@/components/products/wishlist-button';
 import { Badge } from '@/components/ui/badge';
 
 interface ProductPageProps {
@@ -64,8 +65,9 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </p>
             )}
           </div>
-          <div className="mt-8">
+          <div className="mt-8 flex items-center gap-4">
             <AddToCartButton product={product} />
+            <WishlistButton product={product} />
           </div>
         </div>
       </div>

@@ -1,15 +1,17 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingBag, Search } from 'lucide-react';
+import { ShoppingBag, Search, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/hooks/use-cart';
 import { CartSheet } from '@/components/cart/cart-sheet';
 import { UserNav } from '../auth/user-nav';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 export default function Header() {
-  const { totalItems } = useCart();
+  const { totalItems: totalCartItems } = useCart();
+  const { totalItems: totalWishlistItems } = useWishlist();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -26,14 +28,25 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <UserNav />
+          <Button asChild variant="ghost" size="icon" className="relative">
+            <Link href="/wishlist">
+                <Heart className="h-6 w-6" />
+                 {totalWishlistItems > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  {totalWishlistItems}
+                </span>
+              )}
+                <span className="sr-only">Open wishlist</span>
+            </Link>
+          </Button>
           <CartSheet>
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingBag className="h-6 w-6" />
-              {totalItems > 0 && (
+              {totalCartItems > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  {totalItems}
+                  {totalCartItems}
                 </span>
               )}
               <span className="sr-only">Open cart</span>

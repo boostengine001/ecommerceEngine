@@ -5,6 +5,7 @@ import { CartProvider } from '@/hooks/use-cart';
 import { cn } from '@/lib/utils';
 import RootLayoutClient from './layout-client';
 import { AuthProvider } from '@/hooks/use-auth';
+import { WishlistProvider } from '@/hooks/use-wishlist';
 
 export const metadata: Metadata = {
   title: 'BlueCart',
@@ -25,10 +26,12 @@ export default function RootLayout({
       </head>
       <body className={cn('h-full font-body antialiased')}>
         <AuthProvider>
-          <CartProvider>
-            <RootLayoutClient>{children}</RootLayoutClient>
-            <Toaster />
-          </CartProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <RootLayoutClient>{children}</RootLayoutClient>
+              <Toaster />
+            </CartProvider>
+          </WishlistProvider>
         </AuthProvider>
       </body>
     </html>

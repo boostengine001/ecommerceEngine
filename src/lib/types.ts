@@ -14,6 +14,8 @@ export type CartItem = {
   quantity: number;
 } & Product;
 
+export type WishlistItem = Product;
+
 export interface OrderItem extends Product {
     quantity: number;
 }
