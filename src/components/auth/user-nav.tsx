@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,7 +21,7 @@ export function UserNav() {
   const { user, isUserLoading, logout } = useAuth();
 
   if (isUserLoading) {
-    return <Skeleton className="h-9 w-20" />;
+    return <Skeleton className="h-9 w-20 rounded-md" />;
   }
 
   if (!user) {
@@ -37,7 +38,7 @@ export function UserNav() {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
             <AvatarImage src={user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`} alt={user.displayName || "user"} />
-            <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+            <AvatarFallback>{user.displayName ? user.displayName.charAt(0) : user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -52,6 +53,12 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link href="/admin">
+                <Home className="mr-2 h-4 w-4" />
+                <span>Admin</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem disabled>
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
