@@ -6,7 +6,7 @@ import { useToast } from './use-toast';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, showToast?: boolean) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -39,7 +39,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [cartItems]);
   
-  const addToCart = useCallback((product: Product, quantity: number = 1) => {
+  const addToCart = useCallback((product: Product, quantity: number = 1, showToast: boolean = true) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
       if (existingItem) {
@@ -52,10 +52,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const displayPrice = product.salePrice ?? product.price;
       return [...prevItems, { ...product, price: displayPrice, quantity }];
     });
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
+
+    if (showToast) {
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart.`,
+      });
+    }
   }, [toast]);
 
   const removeFromCart = useCallback((productId: string) => {

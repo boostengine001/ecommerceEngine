@@ -5,6 +5,7 @@ import ProductRecommendations from '@/components/products/product-recommendation
 import AddToCartButton from '@/components/products/add-to-cart-button';
 import WishlistButton from '@/components/products/wishlist-button';
 import { Badge } from '@/components/ui/badge';
+import BuyNowButton from '@/components/products/buy-now-button';
 
 interface ProductPageProps {
   params: {
@@ -65,8 +66,9 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </p>
             )}
           </div>
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <AddToCartButton product={product} />
+            <BuyNowButton product={product} />
             <WishlistButton product={product} />
           </div>
         </div>
