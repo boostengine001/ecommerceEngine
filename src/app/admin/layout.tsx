@@ -74,6 +74,7 @@ export default function AdminLayout({
     if (pathname.startsWith('/admin/orders/')) return 'Order Details';
     if (pathname.startsWith('/admin/products/new')) return 'New Product';
     if (pathname.startsWith('/admin/categories/new')) return 'New Category';
+    if (pathname.startsWith('/admin/settings')) return 'Settings';
 
     return 'Admin';
   }
@@ -117,7 +118,7 @@ export default function AdminLayout({
                     <SidebarMenuButton
                         asChild
                         tooltip={{ children: "Settings" }}
-                        disabled
+                        isActive={pathname.startsWith('/admin/settings')}
                     >
                     <Link href="/admin/settings">
                         <Settings />
