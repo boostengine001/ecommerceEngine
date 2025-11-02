@@ -30,10 +30,8 @@ async function createSlug(name: string): Promise<string> {
     const baseSlug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
     let slug = baseSlug;
     let count = 1;
-    // get model from this instead of using a global
-    const CategoryModel = models.Category || model<ICategory>('Category', CategorySchema);
+    const CategoryModel = models.Category || model<ICategory>('Category');
 
-    // Check for existing slug and append a number if it exists
     let existingCategory = await CategoryModel.findOne({ slug });
     while (existingCategory && existingCategory._id.toString() !== (this as any)._id.toString()) {
         slug = `${baseSlug}-${count}`;
@@ -51,7 +49,7 @@ CategorySchema.pre<ICategory>('save', async function (next) {
   if (this.isModified('parent')) {
     if (this.parent) {
       try {
-        const CategoryModel = models.Category || model<ICategory>('Category', CategorySchema);
+        const CategoryModel = models.Category || model<ICategory>('Category');
         const parentCategory = await CategoryModel.findById(this.parent);
         if (parentCategory) {
           this.ancestors = [
@@ -74,5 +72,4 @@ CategorySchema.pre<ICategory>('save', async function (next) {
   next();
 });
 
-// Check if the model is already defined before defining it
 export default models.Category || model<ICategory>('Category', CategorySchema);
