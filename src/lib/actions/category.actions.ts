@@ -28,18 +28,16 @@ export async function addCategory(formData: FormData) {
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const imageFile = formData.get('image') as File;
-  const parentId = formData.get('parent') as string || null;
+  const parentId = formData.get('parent') === 'null' ? null : formData.get('parent') as string;
 
   if (!name || !description || !imageFile) {
       throw new Error('Missing required fields');
   }
   
   const imageUrl = await uploadImage(imageFile);
-  const slug = createSlug(name);
-
+  
   const newCategory = new Category({
     name,
-    slug,
     description,
     image: imageUrl,
     parent: parentId,
@@ -52,13 +50,13 @@ export async function addCategory(formData: FormData) {
 
 export async function getAllCategories(): Promise<ICategory[]> {
   await dbConnect();
-  const categories = await Category.find({}).sort({ name: 1 });
+  const categories = await Category.find({}).sort({ name: 1 }).populate('parent');
   return JSON.parse(JSON.stringify(categories));
 }
 
 export async function getCategory(id: string): Promise<ICategory | null> {
   await dbConnect();
-  const category = await Category.findById(id);
+  const category = await Category.findById(id).populate('parent');
   if (!category) {
       return null;
   }
@@ -72,7 +70,8 @@ export async function updateCategory(id: string, formData: FormData) {
   const description = formData.get('description') as string;
   const imageFile = formData.get('image') as (File | null);
   let imageUrl = formData.get('currentImage') as string;
-  const parentId = formData.get('parent') as string || null;
+  const parentId = formData.get('parent') === 'null' ? null : formData.get('parent') as string;
+
 
   const category = await Category.findById(id);
   if (!category) {
@@ -84,7 +83,6 @@ export async function updateCategory(id: string, formData: FormData) {
   }
 
   category.name = name;
-  category.slug = createSlug(name);
   category.description = description;
   category.image = imageUrl;
   // @ts-ignore
@@ -98,7 +96,16 @@ export async function updateCategory(id: string, formData: FormData) {
 
 export async function deleteCategory(id: string) {
   await dbConnect();
-  // Optional: Add logic to handle children of the deleted category
-  await Category.findByIdAndDelete(id);
+  
+  // Find all descendants of the category to be deleted
+  const descendants = await Category.find({ 'ancestors._id': id });
+  const descendantIds = descendants.map(d => d._id);
+
+  // Combine the ID of the category itself with its descendants
+  const idsToDelete = [id, ...descendantIds];
+
+  // Delete the category and all its descendants
+  await Category.deleteMany({ _id: { $in: idsToDelete } });
+
   revalidatePath('/admin/categories');
 }
