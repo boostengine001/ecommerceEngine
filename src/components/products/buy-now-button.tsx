@@ -2,11 +2,11 @@
 
 import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
-import type { Product } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
+import type { CartProduct } from "@/hooks/use-cart";
 
-export default function BuyNowButton({ product }: { product: Product }) {
+export default function BuyNowButton({ product }: { product: CartProduct }) {
     const { addToCart } = useCart();
     const router = useRouter();
 

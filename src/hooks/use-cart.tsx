@@ -1,12 +1,23 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { CartItem, Product } from '@/lib/types';
+import type { IProduct } from '@/models/Product';
 import { useToast } from './use-toast';
+
+export type CartProduct = {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+}
+export interface CartItem extends CartProduct {
+  quantity: number;
+}
+
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, quantity?: number, showToast?: boolean) => void;
+  addToCart: (product: CartProduct, quantity?: number, showToast?: boolean) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -39,7 +50,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [cartItems]);
   
-  const addToCart = useCallback((product: Product, quantity: number = 1, showToast: boolean = true) => {
+  const addToCart = useCallback((product: CartProduct, quantity: number = 1, showToast: boolean = true) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
       if (existingItem) {
@@ -49,8 +60,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             : item
         );
       }
-      const displayPrice = product.salePrice ?? product.price;
-      return [...prevItems, { ...product, price: displayPrice, quantity }];
+      return [...prevItems, { ...product, quantity }];
     });
 
     if (showToast) {

@@ -2,18 +2,18 @@
 
 import { useWishlist } from "@/hooks/use-wishlist";
 import { Button } from "@/components/ui/button";
-import type { Product } from "@/lib/types";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { IProduct } from "@/models/Product";
 
-export default function WishlistButton({ product }: { product: Product }) {
+export default function WishlistButton({ product }: { product: IProduct }) {
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-    const onWishlist = isInWishlist(product.id);
+    const onWishlist = isInWishlist(product._id);
 
     const handleWishlistClick = () => {
         if (onWishlist) {
-            removeFromWishlist(product.id);
+            removeFromWishlist(product._id);
         } else {
             addToWishlist(product);
         }

@@ -5,8 +5,9 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/hooks/use-cart';
-import type { CartItem as CartItemType } from '@/lib/types';
+import type { CartItem as CartItemType } from '@/hooks/use-cart';
 import Link from 'next/link';
+import { ImageOff } from 'lucide-react';
 
 interface CartItemProps {
   item: CartItemType;
@@ -25,14 +26,20 @@ export default function CartItem({ item }: CartItemProps) {
   return (
     <div className="flex items-start gap-4">
       <Link href={`/products/${item.id}`} className="block flex-shrink-0">
-        <Image
-          src={item.image}
-          alt={item.name}
-          width={80}
-          height={80}
-          className="rounded-md object-cover"
-          data-ai-hint={item.imageHint}
-        />
+         <div className="relative h-20 w-20 rounded-md border bg-muted">
+          {item.image ? (
+            <Image
+              src={item.image}
+              alt={item.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <ImageOff className="h-8 w-8 text-muted-foreground" />
+            </div>
+          )}
+        </div>
       </Link>
       <div className="flex-1">
         <Link href={`/products/${item.id}`} className="block font-medium hover:text-primary">{item.name}</Link>

@@ -22,30 +22,12 @@ export type Product = {
 export type CartItem = {
   id: string;
   quantity: number;
-} & Product;
+  name: string;
+  price: number;
+  image: string;
+};
 
 export type WishlistItem = Product;
-
-export interface OrderItem extends Product {
-    quantity: number;
-}
-
-export type Order = {
-  id: string;
-  customer: {
-    name: string;
-    email: string;
-  };
-  shippingAddress: {
-    address: string;
-    city: string;
-    zip: string;
-  };
-  items: OrderItem[];
-  total: number;
-  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Canceled';
-  date: string;
-};
 
 export type UserProfile = {
   id: string;
@@ -78,5 +60,3 @@ export type Category = {
     href: string;
   }[];
 };
-
-    

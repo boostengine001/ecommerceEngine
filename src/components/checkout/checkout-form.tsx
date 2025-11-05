@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { CreditCard, Truck } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const shippingSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -31,10 +32,19 @@ export default function CheckoutForm() {
   const [step, setStep] = useState(1);
   const router = useRouter();
   const { clearCart } = useCart();
+  const { user } = useAuth();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", address: "", city: "", zip: "", cardNumber: "", expiry: "", cvc: "" },
+    defaultValues: { 
+      name: user?.displayName || "", 
+      address: "", 
+      city: "", 
+      zip: "", 
+      cardNumber: "", 
+      expiry: "", 
+      cvc: "" 
+    },
   });
 
   const handleNextStep = async () => {

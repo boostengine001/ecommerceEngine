@@ -1,10 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { products } from '@/lib/products';
-import { categories } from '@/lib/categories';
 import ProductCard from '@/components/products/product-card';
 import {
   Breadcrumb,
@@ -25,6 +23,11 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { getAllCategories } from '@/lib/actions/category.actions';
+import { getProducts } from '@/lib/actions/product.actions';
+import type { ICategory } from '@/models/Category';
+import type { IProduct } from '@/models/Product';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CategoryPageProps {
   params: {
@@ -34,27 +37,57 @@ interface CategoryPageProps {
 
 export default function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = params;
-  const category = categories.find((c) => c.id === slug);
+  const [category, setCategory] = useState<ICategory | null>(null);
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categoryProducts = useMemo(() => {
-    return products.filter((p) => p.category === slug);
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [allCategories, allProducts] = await Promise.all([
+          getAllCategories(),
+          getProducts(),
+        ]);
+        
+        const currentCategory = allCategories.find(c => c.slug === slug);
+        if (currentCategory) {
+          setCategory(currentCategory);
+          const categoryProducts = allProducts.filter(p => (p.category as ICategory)._id.toString() === currentCategory._id);
+          setProducts(categoryProducts);
+        } else {
+          // Handle category not found
+          setCategory(null);
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch category data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, [slug]);
 
   const { minPrice, maxPrice } = useMemo(() => {
-    if (categoryProducts.length === 0) return { minPrice: 0, maxPrice: 1000 };
-    const prices = categoryProducts.map((p) => p.salePrice ?? p.price);
+    if (products.length === 0) return { minPrice: 0, maxPrice: 1000 };
+    const prices = products.map((p) => p.salePrice ?? p.price);
     return {
       minPrice: Math.floor(Math.min(...prices)),
       maxPrice: Math.ceil(Math.max(...prices)),
     };
-  }, [categoryProducts]);
+  }, [products]);
 
   const [priceRange, setPriceRange] = useState([minPrice, maxPrice]);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [sortBy, setSortBy] = useState('price-asc');
+  
+  useEffect(() => {
+    setPriceRange([minPrice, maxPrice]);
+  }, [minPrice, maxPrice]);
+
 
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = categoryProducts.filter((product) => {
+    let filtered = products.filter((product) => {
       const price = product.salePrice ?? product.price;
       const isInPriceRange = price >= priceRange[0] && price <= priceRange[1];
       const isOnSale = onSaleOnly ? !!product.salePrice : true;
@@ -81,12 +114,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     }
 
     return filtered;
-  }, [categoryProducts, priceRange, onSaleOnly, sortBy]);
-
-  if (!category) {
-    notFound();
-  }
-
+  }, [products, priceRange, onSaleOnly, sortBy]);
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -94,13 +123,43 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     }).format(price);
   };
   
-  // Update price range when min/max prices change
-  if (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) {
-      if (priceRange[0] < minPrice || priceRange[1] > maxPrice) {
-          setPriceRange([minPrice, maxPrice]);
-      }
+  if (loading) {
+    return (
+        <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+             <Skeleton className="h-6 w-1/4 mb-8" />
+             <div className="mb-8 border-b pb-4">
+                <Skeleton className="h-10 w-1/3" />
+            </div>
+             <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+                <aside className="md:col-span-1">
+                     <Skeleton className="h-8 w-1/2 mb-4" />
+                     <Skeleton className="h-40 w-full rounded-lg" />
+                </aside>
+                <main className="md:col-span-3">
+                    <div className="flex items-center justify-between mb-6">
+                        <Skeleton className="h-6 w-1/4" />
+                        <Skeleton className="h-10 w-[180px]" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                         {[...Array(6)].map((_, i) => (
+                            <div key={i} className="flex flex-col space-y-3">
+                                <Skeleton className="aspect-square w-full rounded-xl" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </main>
+            </div>
+        </div>
+    )
   }
 
+  if (!category) {
+    notFound();
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -171,7 +230,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           {filteredAndSortedProducts.length > 0 ? (
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {filteredAndSortedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product._id} product={product} />
               ))}
             </div>
           ) : (

@@ -12,9 +12,10 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Heart } from 'lucide-react';
 import Link from 'next/link';
+import type { IProduct } from '@/models/Product';
 
 export default function WishlistPage() {
-  const { wishlistItems, totalItems, clearWishlist } = useWishlist();
+  const { wishlistItems, totalItems } = useWishlist();
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -45,7 +46,7 @@ export default function WishlistPage() {
         <>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {wishlistItems.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product._id} product={product as IProduct} />
             ))}
           </div>
         </>

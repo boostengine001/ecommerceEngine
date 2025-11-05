@@ -7,58 +7,60 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 
-export default function HeroSlider() {
-  const sliderImages = PlaceHolderImages.filter((img) =>
-    img.id.startsWith('hero-slide')
-  );
-
-  const slides = [
+// Mock data for slides, in a real app this might come from a CMS
+const slides = [
     {
       id: 'slide1',
       title: 'Experience True Immersion',
       subtitle: 'With the new SoundScape Pro',
       buttonText: 'Shop Headphones',
-      buttonLink: '/products/wireless-headphones',
-      image: sliderImages.find((img) => img.id === 'hero-slide-1'),
+      buttonLink: '/products/soundscape-pro',
+      imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoZWFkcGhvbmVzfGVufDB8fHx8MTc2MjA5NTEwN3ww&ixlib=rb-4.1.0&q=80&w=1080',
+      imageHint: 'headphones'
     },
     {
       id: 'slide2',
       title: 'Timeless Elegance',
       subtitle: 'Discover the Azure Timepiece',
       buttonText: 'Shop Watches',
-      buttonLink: '/products/blue-watch',
-      image: sliderImages.find((img) => img.id === 'hero-slide-2'),
+      buttonLink: '/products/azure-timepiece',
+      imageUrl: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3YXRjaHxlbnwwfHx8fDE3NjIwOTUxNDB8MA&ixlib=rb-4.1.0&q=80&w=1080',
+      imageHint: 'watch'
     },
     {
       id: 'slide3',
       title: 'Brew Perfection',
       subtitle: 'Your day starts with the Morning BrewMaster',
       buttonText: 'Shop Coffee Makers',
-      buttonLink: '/products/coffee-maker',
-      image: sliderImages.find((img) => img.id === 'hero-slide-3'),
+      buttonLink: '/products/morning-brewmaster',
+      imageUrl: 'https://images.unsplash.com/photo-1545665225-b23b99e4d45e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb2ZmZWUlMjBtYWtlcnxlbnwwfHx8fDE3NjIwOTUxNjV8MA&ixlib=rb-4.1.0&q=80&w=1080',
+      imageHint: 'coffee maker'
     },
     {
       id: 'slide4',
       title: 'Smart Home, Smart Sound',
       subtitle: 'Meet the new EchoSphere',
       buttonText: 'Shop Smart Speakers',
-      buttonLink: '/products/smart-speaker',
-      image: sliderImages.find((img) => img.id === 'hero-slide-4'),
+      buttonLink: '/products/echosphere',
+      imageUrl: 'https://images.unsplash.com/photo-1518444065439-e933c06ce9cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzbWFydCUyMHNwZWFrZXJ8ZW58MHx8fHwxNzYyMDk1MjEwfDA&ixlib=rb-4.1.0&q=80&w=1080',
+      imageHint: 'smart speaker'
     },
     {
       id: 'slide5',
       title: 'Engineered for Speed',
       subtitle: 'The Velocity Runners',
       buttonText: 'Shop Running Shoes',
-      buttonLink: '/products/running-shoes',
-      image: sliderImages.find((img) => img.id === 'hero-slide-5'),
+      buttonLink: '/products/velocity-runners',
+      imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxydW5uaW5nJTIwc2hvZXN8ZW58MHx8fHwxNzYyMDk1MjM0fDA&ixlib=rb-4.1.0&q=80&w=1080',
+      imageHint: 'running shoes'
     },
   ];
+
+export default function HeroSlider() {
 
   return (
     <div className="w-full">
@@ -72,13 +74,13 @@ export default function HeroSlider() {
           {slides.map((slide) => (
             <CarouselItem key={slide.id}>
               <div className="relative h-[300px] w-full md:h-[400px] lg:h-[500px]">
-                {slide.image && (
+                {slide.imageUrl && (
                   <Image
-                    src={slide.image.imageUrl}
-                    alt={slide.image.description}
+                    src={slide.imageUrl}
+                    alt={slide.subtitle}
                     fill
                     className="object-cover"
-                    data-ai-hint={slide.image.imageHint}
+                    data-ai-hint={slide.imageHint}
                     priority={slide.id === 'slide1'}
                   />
                 )}
@@ -102,5 +104,3 @@ export default function HeroSlider() {
     </div>
   );
 }
-
-    

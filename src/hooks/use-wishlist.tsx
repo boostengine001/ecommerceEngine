@@ -1,12 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { WishlistItem, Product } from '@/lib/types';
+import type { IProduct } from '@/models/Product';
 import { useToast } from './use-toast';
+
+export type WishlistItem = IProduct;
 
 interface WishlistContextType {
   wishlistItems: WishlistItem[];
-  addToWishlist: (product: Product) => void;
+  addToWishlist: (product: IProduct) => void;
   removeFromWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
   clearWishlist: () => void;
@@ -38,13 +40,12 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [wishlistItems]);
   
-  const addToWishlist = useCallback((product: Product) => {
+  const addToWishlist = useCallback((product: IProduct) => {
     setWishlistItems(prevItems => {
-      if (prevItems.some(item => item.id === product.id)) {
+      if (prevItems.some(item => item._id === product._id)) {
         return prevItems;
       }
-      const displayPrice = product.salePrice ?? product.price;
-      return [...prevItems, { ...product, price: displayPrice }];
+      return [...prevItems, product];
     });
     toast({
       title: "Added to wishlist",
@@ -53,7 +54,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
   const removeFromWishlist = useCallback((productId: string) => {
-    setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
+    setWishlistItems(prevItems => prevItems.filter(item => item._id !== productId));
      toast({
       title: "Removed from wishlist",
       description: `The item has been removed from your wishlist.`,
@@ -65,7 +66,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const isInWishlist = useCallback((productId: string) => {
-    return wishlistItems.some(item => item.id === productId);
+    return wishlistItems.some(item => item._id === productId);
   }, [wishlistItems]);
 
 

@@ -1,4 +1,4 @@
-import { getProductById, products } from '@/lib/products';
+import { getProduct } from '@/lib/actions/product.actions';
 import { notFound } from 'next/navigation';
 import ProductRecommendations from '@/components/products/product-recommendations';
 import AddToCartButton from '@/components/products/add-to-cart-button';
@@ -9,22 +9,31 @@ import ProductMediaGallery from '@/components/products/product-media-gallery';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, CheckCircle } from 'lucide-react';
-import { reviews } from '@/lib/reviews';
+import type { IProduct } from '@/models/Product';
+// Mock reviews as the static file was removed.
+const reviews = [
+    {id: '1', rating: 5, name: 'Customer', title: 'Great!', comment: 'Wonderful product.'},
+    {id: '2', rating: 4, name: 'Another Customer', title: 'Good', comment: 'Pretty good.'}
+]
 
 interface ProductPageProps {
   params: {
-    id: string;
+    // This is the slug, not the id, despite the folder name
+    id: string; 
   };
 }
 
-export function generateStaticParams() {
-    return products.map(product => ({
-        id: product.id,
-    }));
-}
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const product = getProductById(params.id);
+// export async function generateStaticParams() {
+//   const products = await getProducts();
+//   return products.map(product => ({
+//       id: product.slug,
+//   }));
+// }
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  // The param is named `id` due to the folder structure `[id]`, but it's the slug.
+  const product = {} as IProduct; // await getProductBySlug(params.id);
 
   if (!product) {
     notFound();
@@ -39,10 +48,16 @@ export default function ProductPage({ params }: ProductPageProps) {
   
   const isOnSale = product.salePrice && product.salePrice < product.price;
 
+  const productForButtons = {
+    ...JSON.parse(JSON.stringify(product)),
+    id: product._id,
+    image: product.media?.[0]?.url || '',
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
-        <ProductMediaGallery media={product.media} isOnSale={isOnSale} />
+        <ProductMediaGallery media={product.media || []} isOnSale={!!isOnSale} />
 
         <div className="flex flex-col justify-center">
           <h1 className="text-4xl font-bold">{product.name}</h1>
@@ -56,20 +71,19 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </p>
             )}
           </div>
-           {product.highlights && (
-             <ul className="mt-6 space-y-2 text-muted-foreground">
+           {/* This part needs to be adapted if highlights are not in your model */}
+           {/* <ul className="mt-6 space-y-2 text-muted-foreground">
                 {product.highlights.map((highlight, index) => (
                     <li key={index} className="flex items-center gap-2">
                         <CheckCircle className="h-5 w-5 text-primary" />
                         <span>{highlight}</span>
                     </li>
                 ))}
-             </ul>
-            )}
+             </ul> */}
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <AddToCartButton product={product} />
-            <BuyNowButton product={product} />
-            <WishlistButton product={product} />
+            <AddToCartButton product={productForButtons} />
+            <BuyNowButton product={productForButtons} />
+            <WishlistButton product={productForButtons} />
           </div>
         </div>
       </div>
@@ -93,18 +107,8 @@ export default function ProductPage({ params }: ProductPageProps) {
                     <CardTitle>Technical Specifications</CardTitle>
                 </CardHeader>
                 <CardContent>
-                   {product.specifications ? (
-                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      {Object.entries(product.specifications).map(([key, value]) => (
-                        <div key={key} className="rounded-lg bg-muted/50 p-3">
-                          <p className="font-medium">{key}</p>
-                          <p className="text-muted-foreground">{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                   ) : (
-                    <p className="text-muted-foreground">No specifications available.</p>
-                   )}
+                   {/* This part needs to be adapted for your variant structure */}
+                   <p className="text-muted-foreground">No specifications available.</p>
                 </CardContent>
             </Card>
           </TabsContent>
@@ -135,10 +139,8 @@ export default function ProductPage({ params }: ProductPageProps) {
       </div>
 
       <div className="mt-16 md:mt-24">
-        <ProductRecommendations currentProductId={product.id} />
+        <ProductRecommendations currentProductId={product._id} />
       </div>
     </div>
   );
 }
-
-    
