@@ -16,7 +16,6 @@ async function uploadImage(file: File): Promise<string | null> {
     const url = await uploadFile(buffer, fileName);
     return url;
   } catch (error) {
-    console.error("Error uploading file:", error)
     throw new Error("Failed to upload image.");
   }
 }

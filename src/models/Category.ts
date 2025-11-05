@@ -1,20 +1,5 @@
 import mongoose, { Schema, Document, models, model } from 'mongoose';
 
-// --- TEMPORARY INDEX DROP ---
-// This will be removed in the next step.
-const tempSchema = new Schema({}, { strict: false });
-tempSchema.index({ 'subcategories.slug': 1 }, { unique: false });
-const TempModel = models.Category || model('Category', tempSchema);
-TempModel.collection.dropIndex('subcategories.slug_1', function(err, result) {
-    if (err) {
-        // This is expected if the index doesn't exist, so we can ignore the error.
-        // console.log('Error dropping index (may not exist, which is OK):', err);
-    } else {
-        // console.log('Successfully dropped index:', result);
-    }
-});
-// --- END TEMPORARY INDEX DROP ---
-
 
 export interface ICategory extends Document {
   _id: string;
@@ -55,7 +40,6 @@ CategorySchema.pre<ICategory>('save', async function (next) {
             this.ancestors = [];
         }
       } catch (error) {
-          console.error("Error fetching parent category:", error);
           this.parent = null;
           this.ancestors = [];
       }
