@@ -120,6 +120,7 @@ export async function getProducts(): Promise<IProduct[]> {
 export async function getProduct(id: string): Promise<IProduct | null> {
     await dbConnect();
     const product = await Product.findById(id).populate('category');
+    if (!product) return null;
     return JSON.parse(JSON.stringify(product));
 }
 
@@ -127,6 +128,7 @@ export async function getProductBySlug(slug: string): Promise<IProduct | null> {
   await dbConnect();
   await Category.find({}); // Ensure category schema is registered
   const product = await Product.findOne({ slug }).populate('category');
+  if (!product) return null;
   return JSON.parse(JSON.stringify(product));
 }
 
