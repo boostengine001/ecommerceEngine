@@ -10,6 +10,7 @@ import { CartSheet } from '@/components/cart/cart-sheet';
 import { UserNav } from '../auth/user-nav';
 import { useWishlist } from '@/hooks/use-wishlist';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
     logoUrl?: string | null;
@@ -19,6 +20,16 @@ interface HeaderProps {
 export default function Header({ logoUrl, storeName }: HeaderProps) {
   const { totalItems: totalCartItems } = useCart();
   const { totalItems: totalWishlistItems } = useWishlist();
+  const router = useRouter();
+
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const query = formData.get('q');
+    if (typeof query === 'string' && query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -41,7 +52,16 @@ export default function Header({ logoUrl, storeName }: HeaderProps) {
           <Link href="/category/accessories" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Accessories</Link>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center justify-end gap-2">
+           <form onSubmit={handleSearch} className="relative hidden w-full max-w-xs lg:block">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                name="q"
+                placeholder="Search products..."
+                className="w-full rounded-lg bg-background pl-8"
+              />
+          </form>
           <UserNav />
           <Button asChild variant="ghost" size="icon" className="relative">
             <Link href="/wishlist">
