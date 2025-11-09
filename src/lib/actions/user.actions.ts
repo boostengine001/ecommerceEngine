@@ -5,6 +5,11 @@ import dbConnect from '../db';
 import User, { type IUser } from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { cookies } from 'next/headers';
+import { sign, verify } from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+const COOKIE_NAME = 'session_token';
 
 const signupSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -17,6 +22,38 @@ const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string(),
 });
+
+async function createSession(userId: string) {
+  const token = sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+  cookies().set(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+}
+
+export async function getUserFromSession(): Promise<IUser | null> {
+    const token = cookies().get(COOKIE_NAME)?.value;
+    if (!token) return null;
+
+    try {
+        const decoded = verify(token, JWT_SECRET) as { userId: string };
+        await dbConnect();
+        const user = await User.findById(decoded.userId).lean();
+        if (!user) return null;
+        return JSON.parse(JSON.stringify(user));
+    } catch (error) {
+        console.error("Invalid token", error);
+        return null;
+    }
+}
+
+export async function clearUserSession() {
+    cookies().delete(COOKIE_NAME);
+}
+
 
 export async function signup(data: unknown) {
   const result = signupSchema.safeParse(data);
@@ -43,6 +80,8 @@ export async function signup(data: unknown) {
 
   await newUser.save();
   
+  await createSession(newUser._id);
+  
   const userObject = newUser.toObject();
   delete userObject.password;
   return JSON.parse(JSON.stringify(userObject));
@@ -67,6 +106,8 @@ export async function login(data: unknown) {
     if (!isPasswordValid) {
         throw new Error('Invalid email or password.');
     }
+
+    await createSession(user._id);
 
     const userObject = user.toObject();
     delete userObject.password;

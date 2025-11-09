@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -6,9 +7,10 @@ import {
   useContext,
   type ReactNode,
   useCallback,
+  useEffect,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { login as loginAction, signup as signupAction } from '@/lib/actions/user.actions';
+import { login as loginAction, signup as signupAction, getUserFromSession, clearUserSession } from '@/lib/actions/user.actions';
 import type { IUser } from '@/models/User';
 
 // A simplified user object for the client-side context
@@ -35,14 +37,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<ClientUser | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(false);
+  const [isUserLoading, setIsUserLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkSession() {
+        try {
+            const sessionUser = await getUserFromSession();
+            if (sessionUser) {
+                const clientUser: ClientUser = {
+                    ...JSON.parse(JSON.stringify(sessionUser)),
+                    id: sessionUser._id,
+                    displayName: `${sessionUser.firstName} ${sessionUser.lastName}`,
+                };
+                setUser(clientUser);
+            }
+        } catch (error) {
+            console.error("Session check failed", error);
+        } finally {
+            setIsUserLoading(false);
+        }
+    }
+    checkSession();
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsUserLoading(true);
     try {
       const loggedInUser = await loginAction({ email, password });
       const clientUser: ClientUser = {
-        ...loggedInUser,
+        ...JSON.parse(JSON.stringify(loggedInUser)), // Ensure serializable
         id: loggedInUser._id,
         displayName: `${loggedInUser.firstName} ${loggedInUser.lastName}`,
       };
@@ -66,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const newUser = await signupAction({ firstName, lastName, email, password });
          const clientUser: ClientUser = {
-          ...newUser,
+          ...JSON.parse(JSON.stringify(newUser)), // Ensure serializable
           id: newUser._id,
           displayName: `${newUser.firstName} ${newUser.lastName}`,
         };
@@ -80,7 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await clearUserSession();
     setUser(null);
     router.push('/');
   }, [router]);
