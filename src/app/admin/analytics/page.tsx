@@ -11,23 +11,18 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from '@/components/ui/chart';
-import { orders } from '@/lib/orders';
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { useMemo } from 'react';
 import { DollarSign, Package, Users, ShoppingCart } from 'lucide-react';
 import { getProducts } from '@/lib/actions/product.actions';
+import { getUsers } from '@/lib/actions/user.actions';
 import type { IProduct } from '@/models/Product';
+import type { IUser } from '@/models/User';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const chartConfig = {
-  revenue: {
-    label: 'Revenue',
-    color: 'hsl(var(--chart-1))',
-  },
   products: {
     label: 'Products',
     color: 'hsl(var(--chart-2))',
@@ -36,60 +31,52 @@ const chartConfig = {
 
 export default function AnalyticsPage() {
   const [products, setProducts] = useState<IProduct[]>([]);
+  const [users, setUsers] = useState<IUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchProducts() {
-        const prods = await getProducts();
+    async function fetchData() {
+        const [prods, userList] = await Promise.all([
+          getProducts(),
+          getUsers()
+        ]);
         setProducts(prods);
+        setUsers(userList);
         setLoading(false);
     }
-    fetchProducts();
+    fetchData();
   }, []);
 
-  const { monthlyRevenue, totalRevenue, totalOrders, totalCustomers, topSellingProducts } = useMemo(() => {
+  const { totalRevenue, totalOrders, totalCustomers, topSellingProducts, productsPerCategory } = useMemo(() => {
     if (loading) {
-      return { monthlyRevenue: [], totalRevenue: 0, totalOrders: 0, totalCustomers: 0, topSellingProducts: [] };
+      return { totalRevenue: 0, totalOrders: 0, totalCustomers: 0, topSellingProducts: [], productsPerCategory: [] };
     }
+    
+    // NOTE: Order data is not yet implemented. The values below are placeholders.
+    const totalRevenue = 0;
+    const totalOrders = 0;
 
-    const monthlyRevenueMap = new Map<string, number>();
-    let totalRevenue = 0;
-    const customerEmails = new Set<string>();
+    const totalCustomers = users.length;
 
-    orders.forEach((order) => {
-      totalRevenue += order.total;
-      customerEmails.add(order.customer.email);
+    const topSellingProducts: {name: string, sales: number}[] = [];
+    
+    const categoryCount = products.reduce((acc, product) => {
+        const categoryName = (product.category as any)?.name || 'Uncategorized';
+        acc[categoryName] = (acc[categoryName] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
 
-      const month = new Date(order.date).toLocaleString('default', { month: 'short', year: '2-digit' });
-      monthlyRevenueMap.set(month, (monthlyRevenueMap.get(month) || 0) + order.total);
-    });
-
-    const monthlyRevenue = Array.from(monthlyRevenueMap.entries())
-      .map(([month, revenue]) => ({ month, revenue }))
-      .sort((a, b) => new Date(a.month) < new Date(b.month) ? -1 : 1);
-
-
-    const productSalesMap = new Map<string, number>();
-    orders.forEach(order => {
-        order.items.forEach(item => {
-            productSalesMap.set(item.name, (productSalesMap.get(item.name) || 0) + item.quantity);
-        });
-    });
-
-    const topSellingProducts = Array.from(productSalesMap.entries())
-        .map(([name, sales]) => ({ name, sales }))
-        .sort((a, b) => b.sales - a.sales)
-        .slice(0, 5);
+    const productsPerCategory = Object.entries(categoryCount).map(([name, count]) => ({name, products: count}));
 
 
     return {
-      monthlyRevenue,
       totalRevenue,
-      totalOrders: orders.length,
-      totalCustomers: customerEmails.size,
+      totalOrders,
+      totalCustomers,
       topSellingProducts,
+      productsPerCategory
     };
-  }, [loading]);
+  }, [loading, products, users]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -153,37 +140,42 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Over Time</CardTitle>
-            <CardDescription>A summary of your store's revenue per month.</CardDescription>
+            <CardTitle>Products per Category</CardTitle>
+            <CardDescription>A count of products in each top-level category.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                <LineChart data={monthlyRevenue} margin={{ left: -20, right: 20, top: 5, bottom: 5}}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8}/>
-                  <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                   <ChartLegend content={<ChartLegendContent />} />
-                  <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} dot={false} />
-                </LineChart>
+                <BarChart data={productsPerCategory} layout="vertical" margin={{ left: 20, right: 0, top: 5, bottom: 5, }}>
+                    <CartesianGrid horizontal={false} />
+                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={120} />
+                    <XAxis type="number" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="products" fill="var(--color-products)" radius={4} />
+                </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Top Selling Products</CardTitle>
-            <CardDescription>Your best performing products by units sold.</CardDescription>
+            <CardDescription>Your best performing products by units sold. (No order data yet)</CardDescription>
           </CardHeader>
           <CardContent>
-             <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                <BarChart data={topSellingProducts} layout="vertical" margin={{ left: 20, right: 0, top: 5, bottom: 5}}>
-                    <CartesianGrid horizontal={false} />
-                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={120} />
-                    <XAxis type="number" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="sales" fill="var(--color-products)" radius={4} />
-                </BarChart>
-            </ChartContainer>
+             {topSellingProducts.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                    <BarChart data={topSellingProducts} layout="vertical" margin={{ left: 20, right: 0, top: 5, bottom: 5}}>
+                        <CartesianGrid horizontal={false} />
+                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={120} />
+                        <XAxis type="number" />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="sales" fill="var(--color-products)" radius={4} />
+                    </BarChart>
+                </ChartContainer>
+             ) : (
+                <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                    No sales data available yet.
+                </div>
+             )}
           </CardContent>
         </Card>
       </div>
