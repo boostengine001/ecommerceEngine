@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
@@ -37,7 +38,7 @@ export default function AuthLayout({
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="flex items-center justify-center p-4 pt-12 sm:p-6 lg:p-8">
         {children}
       </div>
     </div>
