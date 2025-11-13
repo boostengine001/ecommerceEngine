@@ -1,8 +1,8 @@
 
-"use client";
+'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, Heart } from 'lucide-react';
+import { ShoppingBag, Search, Heart, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/hooks/use-cart';
@@ -12,9 +12,48 @@ import { useWishlist } from '@/hooks/use-wishlist';
 import { useSettings } from '@/hooks/use-settings';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu';
+import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
+import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
+import type { ICategory } from '@/models/Category';
+
+function MainNav({ categories }: { categories: ICategory[] }) {
+  const topLevelCategories = useMemo(() => categories.filter(c => !c.parent).slice(0, 5), [categories]);
+
+  return (
+    <NavigationMenu className="hidden lg:flex">
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <Link href="/shop" legacyBehavior passHref>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Shop All
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        {topLevelCategories.map(category => (
+          <NavigationMenuItem key={category._id}>
+            <Link href={`/category/${category.slug}`} legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                {category.name}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+        ))}
+      </NavigationMenuList>
+    </NavigationMenu>
+  );
+}
+
 
 export default function Header() {
-  const { settings } = useSettings();
+  const { settings, categories } = useSettings();
   const { logoUrl, storeName } = settings;
   const { totalItems: totalCartItems } = useCart();
   const { totalItems: totalWishlistItems } = useWishlist();
@@ -29,26 +68,47 @@ export default function Header() {
     }
   };
 
+  const topLevelCategories = useMemo(() => categories.filter(c => !c.parent), [categories]);
+
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
-           {logoUrl ? (
-            <Image src={logoUrl} alt={storeName || 'Store Logo'} width={120} height={40} className="h-10 w-auto" />
-          ) : (
-            <>
-              <ShoppingBag className="h-6 w-6 text-primary" />
-              <span className="font-headline text-2xl font-bold text-primary">{storeName || 'BlueCart'}</span>
-            </>
-          )}
-        </Link>
-        
-        <div className="hidden flex-1 justify-center md:flex md:gap-x-4">
-          <Link href="/shop" className="text-sm font-medium transition-colors hover:text-primary">Shop</Link>
-          <Link href="/category/menswear" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Men</Link>
-          <Link href="/category/womenswear" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Women</Link>
-          <Link href="/category/accessories" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Accessories</Link>
+        <div className="flex items-center gap-4">
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="lg:hidden">
+                        <Menu />
+                        <span className="sr-only">Toggle Menu</span>
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px]">
+                    <div className="flex h-full flex-col">
+                         <div className="mb-4 border-b pb-4">
+                            <Link href="/" className="flex items-center gap-2 font-bold">
+                                <ShoppingBag className="h-6 w-6 text-primary" />
+                                <span>{storeName || 'BlueCart'}</span>
+                            </Link>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                             <Link href="/shop" className="text-lg font-medium">Shop All</Link>
+                             {topLevelCategories.map(cat => (
+                                 <Link key={cat._id} href={`/category/${cat.slug}`} className="text-lg font-medium text-muted-foreground">{cat.name}</Link>
+                             ))}
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
+            <Link href="/" className="flex items-center gap-2">
+            {logoUrl ? (
+                <Image src={logoUrl} alt={storeName || 'Store Logo'} width={120} height={40} className="h-8 w-auto" />
+            ) : (
+                <span className="font-headline text-xl font-bold">{storeName || 'BlueCart'}</span>
+            )}
+            </Link>
         </div>
+        
+        <MainNav categories={categories} />
 
         <div className="flex flex-1 items-center justify-end gap-2">
            <form onSubmit={handleSearch} className="relative hidden w-full max-w-xs lg:block">
@@ -60,6 +120,10 @@ export default function Header() {
                 className="w-full rounded-lg bg-background pl-8"
               />
           </form>
+           <Button variant="ghost" size="icon" className="lg:hidden">
+              <Search className="h-6 w-6" />
+              <span className="sr-only">Search</span>
+          </Button>
           <UserNav />
           <Button asChild variant="ghost" size="icon" className="relative">
             <Link href="/wishlist">
