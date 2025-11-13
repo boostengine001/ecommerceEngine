@@ -6,6 +6,7 @@ import type { ICategory } from '@/models/Category';
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Separator } from '../ui/separator';
 
 // Simple SVG for WhatsApp
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -51,7 +52,7 @@ export default function Footer({ settings, categories }: { settings: ISettings, 
 
   return (
     <footer className="border-t bg-card">
-      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 pt-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
             <div className="col-span-2 md:col-span-1">
                 <Link href="/" className="flex items-center gap-2">
@@ -61,7 +62,7 @@ export default function Footer({ settings, categories }: { settings: ISettings, 
                         <span className="font-headline text-2xl font-bold">{settings.storeName}</span>
                     )}
                 </Link>
-                <p className="mt-4 text-sm text-muted-foreground">© {new Date().getFullYear()} All rights reserved.</p>
+                
                  {hasSocials && (
                      <div className="mt-4 flex gap-4">
                         {socialLinks.map(social => social.href && (
@@ -135,7 +136,15 @@ export default function Footer({ settings, categories }: { settings: ISettings, 
                 </ul>
             </div>
         </div>
+        <Separator className="my-8" />
+        <div className="flex flex-col items-center justify-between gap-4 pb-8 sm:flex-row">
+            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {settings.storeName}. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">
+                Designed & Developed by <a href="https://boostengine.in" target="_blank" rel="noopener noreferrer" className="font-medium hover:text-primary">Boost Engine</a>.
+            </p>
+        </div>
       </div>
     </footer>
   );
 }
+
