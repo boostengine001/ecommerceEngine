@@ -35,7 +35,7 @@ export default async function AdminDashboardPage() {
   const stats = [
     {
       title: 'Total Revenue',
-      value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue),
+      value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalRevenue),
       change: `${totalSales} successful sales`,
       icon: DollarSign,
     },
@@ -78,9 +78,9 @@ export default async function AdminDashboardPage() {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
     }).format(price);
   };
 

@@ -17,9 +17,9 @@ export default function CartItem({ item }: CartItemProps) {
   const { updateQuantity, removeFromCart } = useCart();
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
     }).format(price);
   };
 

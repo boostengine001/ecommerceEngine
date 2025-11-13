@@ -117,9 +117,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   }, [products, priceRange, onSaleOnly, sortBy]);
   
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
     }).format(price);
   };
   
