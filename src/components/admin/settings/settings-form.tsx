@@ -60,13 +60,18 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
 
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="store">
-        <TabsList>
-          <TabsTrigger value="store">Store</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
-        </TabsList>
+        <div className="flex justify-between items-start">
+            <TabsList>
+            <TabsTrigger value="store">Store</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced</TabsTrigger>
+            </TabsList>
+            <Button type="submit" disabled={loading} className="ml-auto">
+                {loading ? 'Saving...' : 'Save All Changes'}
+            </Button>
+        </div>
 
         <TabsContent value="store" className="mt-6">
           <Card>
@@ -134,9 +139,6 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                   </div>
                </div>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -192,9 +194,6 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                 </div>
               </div>
             </CardContent>
-             <CardFooter className="border-t px-6 py-4">
-              <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
         
