@@ -88,6 +88,9 @@ export default function ImageDropzone({ name, initialImage }: ImageDropzoneProps
           </div>
         )}
       </div>
+      {/* Hidden input to track if the image was removed by the user */}
+      {isRemoved && <input type="hidden" name="isLogoRemoved" value="true" />}
+      
       {/* Hidden input to track the state of the initial image */}
       {!preview && !isRemoved && initialImage && (
         <input type="hidden" name="currentImage" value={initialImage} />

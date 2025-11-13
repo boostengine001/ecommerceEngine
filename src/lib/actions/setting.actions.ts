@@ -5,6 +5,7 @@ import dbConnect from '../db';
 import Setting, { type ISettings } from '@/models/Setting';
 import { revalidatePath } from 'next/cache';
 import { uploadFile } from '../s3';
+import { hexToHsl } from '../utils';
 
 const defaultSettings = {
     storeName: 'BlueCart',
@@ -75,14 +76,18 @@ export async function updateSettings(formData: FormData) {
     }
 
     const imageFile = formData.get('logo') as File | null;
+    const isLogoRemoved = formData.get('isLogoRemoved') === 'true';
     
     if (imageFile && imageFile.size > 0) {
         const uploadedUrl = await uploadImage(imageFile);
         if (uploadedUrl) {
             updates.logoUrl = uploadedUrl;
         }
-    } else if (formData.has('logo') && !imageFile) {
+    } else if (isLogoRemoved) {
         updates.logoUrl = '';
+    } else if (formData.has('currentImage')) {
+        // Keep the existing image if no new file is uploaded and it's not removed
+        updates.logoUrl = formData.get('currentImage');
     }
 
     // Since forms are separate, we only want to update the fields present in the form.
@@ -97,6 +102,10 @@ export async function updateSettings(formData: FormData) {
             updateObject[key] = updates[key];
         }
     });
+    
+    if (updateObject.primaryColor) {
+      updateObject.primaryColor = hexToHsl(updateObject.primaryColor)
+    }
 
 
     const settings = await Setting.findOneAndUpdate({}, { $set: updateObject }, { new: true, upsert: true, setDefaultsOnInsert: true });
