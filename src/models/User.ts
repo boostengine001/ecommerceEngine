@@ -17,7 +17,7 @@ const UserSchema: Schema = new Schema({
   firstName: { type: String, required: [true, 'First name is required.'], trim: true },
   lastName: { type: String, required: [true, 'Last name is required.'], trim: true },
   email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
-  password: { type: String, required: true, select: true }, 
+  password: { type: String, required: true, select: false }, 
   role: { type: Schema.Types.ObjectId, ref: 'Role', required: false },
 }, { timestamps: true });
 
