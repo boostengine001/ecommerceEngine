@@ -53,7 +53,7 @@ export async function createOrder(payload: CreateOrderPayload) {
 
     const newOrder = new Order({
         orderId: orderId,
-        user: user.id,
+        user: user._id,
         items: orderItems.map(item => item._id),
         totalAmount: payload.totalAmount,
         shippingAddress: payload.shippingAddress,
