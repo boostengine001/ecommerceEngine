@@ -3,6 +3,7 @@
 
 import dbConnect from '../db';
 import User, { type IUser } from '@/models/User';
+import Role from '@/models/Role';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
@@ -41,7 +42,7 @@ export async function getUserFromSession(): Promise<IUser | null> {
     try {
         const decoded = verify(token, JWT_SECRET) as { userId: string };
         await dbConnect();
-        const user = await User.findById(decoded.userId).lean();
+        const user = await User.findById(decoded.userId).populate('role').lean();
         if (!user) return null;
         return JSON.parse(JSON.stringify(user));
     } catch (error) {
@@ -116,6 +117,8 @@ export async function login(data: unknown) {
 
 export async function getUsers(): Promise<IUser[]> {
     await dbConnect();
-    const users = await User.find({}).sort({ createdAt: -1 }).lean();
+    // Eagerly import Role model to prevent MissingSchemaError
+    await Role.find({});
+    const users = await User.find({}).populate('role').sort({ createdAt: -1 }).lean();
     return JSON.parse(JSON.stringify(users));
 }

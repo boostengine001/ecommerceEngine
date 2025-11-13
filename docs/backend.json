@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Product": {
@@ -121,6 +122,10 @@
         "billingAddress": {
           "type": "string",
           "description": "User's billing address."
+        },
+        "roleId": {
+            "type": "string",
+            "description": "Reference to the AdminRole. (Relationship: AdminRole 1:N UserProfile)"
         }
       },
       "required": [
@@ -207,6 +212,34 @@
         "quantity",
         "price"
       ]
+    },
+     "AdminRole": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminRole",
+      "type": "object",
+      "description": "Represents a role for an admin user, defining their permissions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the admin role."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the role (e.g., 'Super Admin', 'Product Manager')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the role's responsibilities."
+        },
+        "permissions": {
+          "type": "array",
+          "description": "A list of permission strings that define what the role can do.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["id", "name", "permissions"]
     }
   },
   "auth": {
@@ -245,6 +278,22 @@
             {
               "name": "userId",
               "description": "Unique identifier for the user."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/roles/{roleId}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/AdminRole"
+          },
+          "description": "Stores admin role definitions and their associated permissions.",
+          "params": [
+            {
+              "name": "roleId",
+              "description": "Unique identifier for the role."
             }
           ]
         }
@@ -330,6 +379,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support BlueCart's eCommerce features while adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages structural segregation and access modeling to ensure secure and scalable data management.\n\n**Authorization Independence:**\n\n*   User-owned data (Carts, Orders) is nested under `/users/{userId}` to establish clear ownership without needing `get()` calls in security rules.\n\n**Structural Segregation:**\n\n*   Products are stored in a top-level `/products` collection, separate from user-specific data. This segregation simplifies security rules since all products share the same access requirements.\n\n**Access Modeling:**\n\n*   User profiles are stored in `/users/{userId}`. Carts and Orders are subcollections under `/users/{userId}`, reflecting a clear ownership hierarchy.\n\n**QAPs (Rules are not Filters):**\n\n*   Products are in their own collection, `/products`, allowing secure listing of products without exposing private user data. Security rules can allow read access to all documents in the `/products` collection, fulfilling the QAP requirement for product listings.\n\nThis structure promotes simple, robust, and easily debuggable security rules by:\n\n*   Avoiding hierarchical authorization dependencies (no `get()` calls).\n*   Making authorization intent explicit through path-based ownership.\n*   Supporting atomic operations (transactions/batches) by eliminating the need to fetch parent data for authorization.\n*   Enabling secure list operations through structural segregation."
+    "reasoning": "The Firestore data structure is designed to support BlueCart's eCommerce features while adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages structural segregation and access modeling to ensure secure and scalable data management.\n\n**Authorization Independence:**\n\n*   User-owned data (Carts, Orders) is nested under `/users/{userId}` to establish clear ownership without needing `get()` calls in security rules.\n\n**Structural Segregation:**\n\n*   Products are stored in a top-level `/products` collection, separate from user-specific data. This segregation simplifies security rules since all products share the same access requirements.\n* Roles are stored in a top-level `/roles` collection, allowing for centralized management of permissions.\n\n**Access Modeling:**\n\n*   User profiles are stored in `/users/{userId}`. Carts and Orders are subcollections under `/users/{userId}`, reflecting a clear ownership hierarchy. A user's role is stored as a reference on their profile.\n\n**QAPs (Rules are not Filters):**\n\n*   Products are in their own collection, `/products`, allowing secure listing of products without exposing private user data. Security rules can allow read access to all documents in the `/products` collection, fulfilling the QAP requirement for product listings.\n\nThis structure promotes simple, robust, and easily debuggable security rules by:\n\n*   Avoiding hierarchical authorization dependencies (no `get()` calls).\n*   Making authorization intent explicit through path-based ownership.\n*   Supporting atomic operations (transactions/batches) by eliminating the need to fetch parent data for authorization.\n*   Enabling secure list operations through structural segregation."
   }
 }
