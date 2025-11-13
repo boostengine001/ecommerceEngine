@@ -17,26 +17,32 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, Package, ShoppingCart, Users } from 'lucide-react';
 import { getProducts } from '@/lib/actions/product.actions';
 import { getUsers } from '@/lib/actions/user.actions';
+import { getOrders } from '@/lib/actions/order.actions';
+import type { IOrder } from '@/models/Order';
+import type { IUser } from '@/models/User';
+import Link from 'next/link';
 
 export default async function AdminDashboardPage() {
-
   const products = await getProducts();
   const users = await getUsers();
-  // NOTE: Order data is not implemented yet.
-  const totalRevenue = 0;
-  const totalSales = 0;
+  const orders = await getOrders();
 
+  const successfulOrders = orders.filter(o => o.status !== 'Pending' && o.status !== 'Failed');
+
+  const totalRevenue = successfulOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalSales = successfulOrders.length;
+  
   const stats = [
     {
       title: 'Total Revenue',
       value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue),
-      change: 'No sales data yet',
+      change: `${totalSales} successful sales`,
       icon: DollarSign,
     },
     {
       title: 'Total Sales',
       value: `+${totalSales}`,
-      change: 'No sales data yet',
+      change: `Across all time`,
       icon: ShoppingCart,
     },
     {
@@ -53,7 +59,30 @@ export default async function AdminDashboardPage() {
     },
   ];
 
-  const recentSales: any[] = [];
+  const recentSales: IOrder[] = orders.slice(0, 5);
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Paid':
+      case 'Shipped':
+      case 'Delivered':
+        return 'default';
+      case 'Processing':
+        return 'secondary';
+      case 'Failed':
+      case 'Cancelled':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  };
 
   return (
     <div className="space-y-6">
@@ -77,7 +106,7 @@ export default async function AdminDashboardPage() {
         <CardHeader>
           <CardTitle>Recent Sales</CardTitle>
           <CardDescription>
-            A list of recent sales from your store.
+            Your 5 most recent sales.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -85,34 +114,34 @@ export default async function AdminDashboardPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
-                <TableHead>Product</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recentSales.length > 0 ? (
                 recentSales.map((sale) => (
-                  <TableRow key={sale.email}>
+                  <TableRow key={sale._id}>
                     <TableCell>
-                      <div className="font-medium">{sale.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {sale.email}
-                      </div>
+                      <Link href={`/admin/orders/${sale._id}`}>
+                        <div className="font-medium hover:underline">{(sale.user as IUser).firstName} {(sale.user as IUser).lastName}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {(sale.user as IUser).email}
+                        </div>
+                      </Link>
                     </TableCell>
-                    <TableCell>{sale.product}</TableCell>
-                    <TableCell>
+                     <TableCell>
                       <Badge
-                        variant={
-                          sale.status === 'Shipped' || sale.status === 'Delivered'
-                            ? 'default'
-                            : 'secondary'
-                        }
+                        variant={getStatusVariant(sale.status)}
                       >
                         {sale.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">{sale.amount}</TableCell>
+                    <TableCell>
+                      {new Date(sale.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">{formatPrice(sale.totalAmount)}</TableCell>
                   </TableRow>
                 ))
               ) : (

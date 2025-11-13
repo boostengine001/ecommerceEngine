@@ -8,6 +8,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { WishlistProvider } from '@/hooks/use-wishlist';
 import { getSettings } from '@/lib/actions/setting.actions';
 import { ThemeProvider } from '@/components/theme-provider';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'BlueCart',
@@ -50,6 +51,7 @@ export default async function RootLayout({
             </WishlistProvider>
           </AuthProvider>
         </ThemeProvider>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>
   );

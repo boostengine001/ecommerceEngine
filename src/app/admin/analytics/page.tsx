@@ -17,8 +17,10 @@ import { useMemo } from 'react';
 import { DollarSign, Package, Users, ShoppingCart } from 'lucide-react';
 import { getProducts } from '@/lib/actions/product.actions';
 import { getUsers } from '@/lib/actions/user.actions';
+import { getOrders } from '@/lib/actions/order.actions';
 import type { IProduct } from '@/models/Product';
 import type { IUser } from '@/models/User';
+import type { IOrder, IOrderItem } from '@/models/Order';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -26,22 +28,29 @@ const chartConfig = {
   products: {
     label: 'Products',
     color: 'hsl(var(--chart-2))',
+  },
+  sales: {
+    label: 'Sales',
+    color: 'hsl(var(--chart-1))',
   }
 };
 
 export default function AnalyticsPage() {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [users, setUsers] = useState<IUser[]>([]);
+  const [orders, setOrders] = useState<IOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-        const [prods, userList] = await Promise.all([
+        const [prods, userList, orderList] = await Promise.all([
           getProducts(),
-          getUsers()
+          getUsers(),
+          getOrders(),
         ]);
         setProducts(prods);
         setUsers(userList);
+        setOrders(orderList);
         setLoading(false);
     }
     fetchData();
@@ -52,13 +61,26 @@ export default function AnalyticsPage() {
       return { totalRevenue: 0, totalOrders: 0, totalCustomers: 0, topSellingProducts: [], productsPerCategory: [] };
     }
     
-    // NOTE: Order data is not yet implemented. The values below are placeholders.
-    const totalRevenue = 0;
-    const totalOrders = 0;
+    const successfulOrders = orders.filter(o => o.status !== 'Pending' && o.status !== 'Failed');
 
+    const totalRevenue = successfulOrders.reduce((acc, order) => acc + order.totalAmount, 0);
+    const totalOrders = successfulOrders.length;
     const totalCustomers = users.length;
 
-    const topSellingProducts: {name: string, sales: number}[] = [];
+    const productSales = successfulOrders.reduce((acc, order) => {
+        order.items.forEach((item: IOrderItem) => {
+            const productId = item.product?._id?.toString();
+            if (productId) {
+                 if (!acc[productId]) {
+                    acc[productId] = { name: item.product.name, sales: 0 };
+                }
+                acc[productId].sales += item.quantity;
+            }
+        });
+        return acc;
+    }, {} as Record<string, {name: string, sales: number}>);
+
+    const topSellingProducts = Object.values(productSales).sort((a,b) => b.sales - a.sales).slice(0, 10);
     
     const categoryCount = products.reduce((acc, product) => {
         const categoryName = (product.category as any)?.name || 'Uncategorized';
@@ -76,7 +98,7 @@ export default function AnalyticsPage() {
       topSellingProducts,
       productsPerCategory
     };
-  }, [loading, products, users]);
+  }, [loading, products, users, orders]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -148,7 +170,7 @@ export default function AnalyticsPage() {
                 <BarChart data={productsPerCategory} layout="vertical" margin={{ left: 20, right: 0, top: 5, bottom: 5, }}>
                     <CartesianGrid horizontal={false} />
                     <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={120} />
-                    <XAxis type="number" />
+                    <XAxis type="number" dataKey="products"/>
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="products" fill="var(--color-products)" radius={4} />
                 </BarChart>
@@ -158,7 +180,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Top Selling Products</CardTitle>
-            <CardDescription>Your best performing products by units sold. (No order data yet)</CardDescription>
+            <CardDescription>Your best performing products by units sold.</CardDescription>
           </CardHeader>
           <CardContent>
              {topSellingProducts.length > 0 ? (
@@ -166,9 +188,9 @@ export default function AnalyticsPage() {
                     <BarChart data={topSellingProducts} layout="vertical" margin={{ left: 20, right: 0, top: 5, bottom: 5}}>
                         <CartesianGrid horizontal={false} />
                         <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={120} />
-                        <XAxis type="number" />
+                        <XAxis type="number" dataKey="sales"/>
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="sales" fill="var(--color-products)" radius={4} />
+                        <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
                     </BarChart>
                 </ChartContainer>
              ) : (

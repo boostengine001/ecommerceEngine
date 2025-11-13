@@ -1,39 +1,44 @@
+'use client';
 
-"use client";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { useCart } from "@/hooks/use-cart";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
-import { CreditCard, Truck } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useCart } from '@/hooks/use-cart';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { CreditCard, Truck, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { createOrder, verifyPayment } from '@/lib/actions/order.actions';
+import { useToast } from '@/hooks/use-toast';
+import type { ISettings } from '@/models/Setting';
+import { getSettings } from '@/lib/actions/setting.actions';
 
-const shippingSchema = z.object({
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
+
+
+const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   address: z.string().min(5, "Address is required"),
   city: z.string().min(2, "City is required"),
   zip: z.string().min(5, "ZIP code is required"),
+  email: z.string().email(),
+  phone: z.string().min(10, "Phone number is required"),
 });
-
-const paymentSchema = z.object({
-  cardNumber: z.string().length(16, "Card number must be 16 digits.").refine(val => !isNaN(parseInt(val)), "Card number must be digits."),
-  expiry: z.string().regex(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/, "Invalid expiry date (MM/YY)"),
-  cvc: z.string().min(3, "CVC must be 3 or 4 digits.").max(4, "CVC must be 3 or 4 digits.").refine(val => !isNaN(parseInt(val)), "CVC must be digits."),
-});
-
-const formSchema = shippingSchema.merge(paymentSchema);
 
 export default function CheckoutForm() {
-  const [step, setStep] = useState(1);
   const router = useRouter();
-  const { clearCart } = useCart();
+  const { cartItems, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,31 +46,96 @@ export default function CheckoutForm() {
       name: user?.displayName || "", 
       address: "", 
       city: "", 
-      zip: "", 
-      cardNumber: "", 
-      expiry: "", 
-      cvc: "" 
+      zip: "",
+      email: user?.email || "",
+      phone: "",
     },
   });
-
-  const handleNextStep = async () => {
-    const isValid = await form.trigger(["name", "address", "city", "zip"]);
-    if (isValid) {
-      setStep(2);
-    }
-  };
   
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Order submitted:", values);
-    clearCart();
-    router.push('/order-confirmed');
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+
+    try {
+        const orderPayload = {
+            shippingAddress: values,
+            items: cartItems.map(item => ({
+                product: item.id, // In cart, 'id' is the product ID
+                quantity: item.quantity,
+                price: item.price,
+                variantSku: item.id.includes('-') ? item.id : undefined // Simple check if it's a variant SKU
+            })),
+            totalAmount: totalPrice
+        }
+
+        const serverOrder = await createOrder(orderPayload);
+        const settings: ISettings = await getSettings();
+
+        const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+            amount: serverOrder.razorpayOrder.amount,
+            currency: serverOrder.razorpayOrder.currency,
+            name: settings.storeName || "BlueCart",
+            description: `Order #${serverOrder.orderId}`,
+            image: settings.logoUrl,
+            order_id: serverOrder.razorpayOrder.id,
+            handler: async function (response: any) {
+                const verificationData = {
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                };
+
+                const result = await verifyPayment(verificationData);
+
+                if (result.isVerified) {
+                    clearCart();
+                    router.push('/order-confirmed');
+                } else {
+                     toast({
+                        variant: "destructive",
+                        title: "Payment Failed",
+                        description: "Payment verification failed. Please contact support.",
+                    });
+                }
+            },
+            prefill: {
+                name: values.name,
+                email: values.email,
+                contact: values.phone,
+            },
+            notes: {
+                address: `${values.address}, ${values.city}, ${values.zip}`
+            },
+            theme: {
+                color: "#3399cc"
+            }
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response: any) {
+            toast({
+                variant: "destructive",
+                title: "Payment Failed",
+                description: response.error.description,
+            });
+             setLoading(false);
+        });
+        rzp.open();
+
+    } catch (error) {
+        console.error("Failed to create order:", error);
+        toast({
+            variant: "destructive",
+            title: "Order Error",
+            description: "Could not create the order. Please try again.",
+        });
+        setLoading(false);
+    }
   }
 
   return (
     <Card>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className={step === 1 ? 'block' : 'hidden'}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Truck/> Shipping Information</CardTitle>
             </CardHeader>
@@ -73,6 +143,14 @@ export default function CheckoutForm() {
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
               )} />
+               <div className="grid grid-cols-2 gap-4">
+                 <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                 <FormField control={form.control} name="phone" render={({ field }) => (
+                    <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+               </div>
               <FormField control={form.control} name="address" render={({ field }) => (
                 <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
               )} />
@@ -84,34 +162,21 @@ export default function CheckoutForm() {
                   <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
               </div>
-              <Button type="button" onClick={handleNextStep} className="w-full !mt-6">Continue to Payment</Button>
+              <Button type="submit" className="w-full !mt-6" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                {loading ? "Processing..." : `Pay ${formatPrice(totalPrice)}`}
+              </Button>
             </CardContent>
-          </div>
-
-          <div className={step === 2 ? 'block' : 'hidden'}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><CreditCard/> Payment Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField control={form.control} name="cardNumber" render={({ field }) => (
-                <FormItem><FormLabel>Card Number</FormLabel><FormControl><Input placeholder="0000 0000 0000 0000" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="expiry" render={({ field }) => (
-                  <FormItem><FormLabel>Expiry Date</FormLabel><FormControl><Input placeholder="MM/YY" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="cvc" render={({ field }) => (
-                  <FormItem><FormLabel>CVC</FormLabel><FormControl><Input placeholder="123" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-              </div>
-              <div className="flex flex-col-reverse gap-4 sm:flex-row !mt-6">
-                <Button type="button" variant="outline" onClick={() => setStep(1)} className="w-full">Back to Shipping</Button>
-                <Button type="submit" className="w-full">Place Order</Button>
-              </div>
-            </CardContent>
-          </div>
         </form>
       </Form>
     </Card>
   );
 }
+
+
+const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  };
