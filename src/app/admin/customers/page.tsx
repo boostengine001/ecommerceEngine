@@ -1,4 +1,5 @@
 
+
 import {
   Card,
   CardContent,
@@ -26,6 +27,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getUsers } from '@/lib/actions/user.actions';
 import type { IUser } from '@/models/User';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import type { IRole } from '@/models/Role';
+
 
 export default async function AdminCustomersPage() {
   const users = await getUsers();
@@ -51,6 +56,7 @@ export default async function AdminCustomersPage() {
               <TableRow>
                 <TableHead>Customer</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -69,6 +75,13 @@ export default async function AdminCustomersPage() {
                     </div>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                   <TableCell>
+                    {user.role ? (
+                      <Badge variant="secondary">{(user.role as IRole).name}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground">No Role</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -79,7 +92,9 @@ export default async function AdminCustomersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem disabled>View Details</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/customers/${user._id}/edit`}>Edit</Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem disabled>View Orders</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import dbConnect from '../db';
@@ -8,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { sign, verify } from 'jsonwebtoken';
+import { revalidatePath } from 'next/cache';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const COOKIE_NAME = 'session_token';
@@ -121,4 +123,45 @@ export async function getUsers(): Promise<IUser[]> {
     await Role.find({});
     const users = await User.find({}).populate('role').sort({ createdAt: -1 }).lean();
     return JSON.parse(JSON.stringify(users));
+}
+
+export async function getUser(id: string): Promise<IUser | null> {
+    await dbConnect();
+    const user = await User.findById(id).populate('role').lean();
+    if (!user) return null;
+    return JSON.parse(JSON.stringify(user));
+}
+
+export async function getRoles(): Promise<IRole[]> {
+  await dbConnect();
+  const roles = await Role.find({}).sort({ name: 1 }).lean();
+  return JSON.parse(JSON.stringify(roles));
+}
+
+export async function updateUser(formData: FormData) {
+  await dbConnect();
+
+  const id = formData.get('id') as string;
+  const firstName = formData.get('firstName') as string;
+  const lastName = formData.get('lastName') as string;
+  const roleId = formData.get('role') as string;
+
+  const user = await User.findById(id);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  user.firstName = firstName;
+  user.lastName = lastName;
+  
+  if (roleId && roleId !== 'none') {
+    user.role = roleId;
+  } else {
+    user.role = undefined;
+  }
+
+  await user.save();
+
+  revalidatePath('/admin/customers');
+  revalidatePath(`/admin/customers/${id}/edit`);
 }
