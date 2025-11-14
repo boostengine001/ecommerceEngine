@@ -61,15 +61,27 @@ export default function ProductCard({ product }: ProductCardProps) {
           {isOnSale && (
             <Badge className="absolute top-2 left-2 z-10" variant="destructive">Sale</Badge>
           )}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute top-2 right-2 z-10 h-9 w-9 rounded-full bg-background/60 text-muted-foreground backdrop-blur-sm transition-all hover:bg-background"
-            onClick={handleWishlistClick}
-          >
-            <Heart className={cn("h-5 w-5", onWishlist && "fill-destructive text-destructive")} />
-            <span className="sr-only">Add to wishlist</span>
-          </Button>
+          
+          <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-9 w-9 rounded-full bg-background/60 text-muted-foreground backdrop-blur-sm transition-all hover:bg-background"
+              onClick={handleWishlistClick}
+            >
+              <Heart className={cn("h-5 w-5", onWishlist && "fill-destructive text-destructive")} />
+              <span className="sr-only">Add to wishlist</span>
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-9 w-9 shrink-0 rounded-full bg-background/60 text-muted-foreground backdrop-blur-sm transition-all hover:bg-background md:hidden"
+              onClick={handleAddToCart}
+            >
+              <PlusCircle className="h-5 w-5" />
+              <span className="sr-only">Add to Cart</span>
+            </Button>
+          </div>
 
           {imageUrl ? (
             <Image
@@ -104,15 +116,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </p>
                 )}
             </div>
-             <Button
-              size="icon"
-              variant="secondary"
-              className="h-9 w-9 shrink-0 rounded-full md:hidden"
-              onClick={handleAddToCart}
-            >
-              <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">Add to Cart</span>
-            </Button>
         </div>
       </CardContent>
       <div className="hidden p-4 pt-0 md:block">
