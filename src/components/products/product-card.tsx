@@ -71,6 +71,15 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Heart className={cn("h-5 w-5", onWishlist && "fill-destructive text-destructive")} />
               <span className="sr-only">Add to wishlist</span>
             </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              className="absolute bottom-2 right-2 z-10 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm transition-all hover:bg-background md:hidden"
+              onClick={handleAddToCart}
+            >
+              <PlusCircle className="h-5 w-5" />
+              <span className="sr-only">Add to Cart</span>
+            </Button>
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -105,10 +114,6 @@ export default function ProductCard({ product }: ProductCardProps) {
               </p>
             )}
           </div>
-          <Button onClick={handleAddToCart} size="icon" className="h-9 w-9 shrink-0 md:hidden">
-            <PlusCircle className="h-5 w-5" />
-            <span className="sr-only">Add to Cart</span>
-          </Button>
         </div>
       </CardContent>
       <CardFooter className="hidden p-4 pt-0 md:flex">
