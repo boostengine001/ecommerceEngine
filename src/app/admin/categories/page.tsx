@@ -9,7 +9,6 @@ import { DataTable } from "./data-table";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -31,44 +30,43 @@ export const dynamic = 'force-dynamic';
 function CategoryCard({ category }: { category: ICategory }) {
   const parent = category.parent as ICategory | null;
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-4">
-         <Image src={category.image} alt={category.name} width={60} height={60} className="rounded-md object-cover" />
-        <div className="flex-1">
-          <CardTitle className="text-lg">{category.name}</CardTitle>
-          <p className="text-sm text-muted-foreground">/{category.slug}</p>
-        </div>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                    <Link href={`/admin/categories/${category._id}/edit`}>Edit</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteCategoryButton id={category._id} variant="ghost" className="w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive" />
-                </DropdownMenuItem>
-            </DropdownMenuContent>
+    <Card className="flex items-center gap-4 p-4">
+       <Image src={category.image} alt={category.name} width={60} height={60} className="rounded-md object-cover aspect-square" />
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+            <div>
+                 <h3 className="font-semibold">{category.name}</h3>
+                 <p className="text-sm text-muted-foreground">/{category.slug}</p>
+            </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0 flex-shrink-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                        <Link href={`/admin/categories/${category._id}/edit`}>Edit</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
+                        <DeleteCategoryButton id={category._id} variant="ghost" className="w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive" />
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
             </DropdownMenu>
-      </CardHeader>
-      <CardContent>
-         <p className="truncate text-sm text-muted-foreground">{category.description}</p>
-      </CardContent>
-      <CardFooter>
-          {parent ? (
-            <Link href={`/admin/categories/${parent._id}/edit`} className="text-sm hover:underline">
-               Parent: <span className="font-medium">{parent.name}</span>
-            </Link>
-          ) : (
-            <Badge variant="secondary">Top-Level</Badge>
-          )}
-      </CardFooter>
+        </div>
+         <div className="mt-2">
+            {parent ? (
+                <Link href={`/admin/categories/${parent._id}/edit`} className="text-xs hover:underline">
+                Parent: <span className="font-medium">{parent.name}</span>
+                </Link>
+            ) : (
+                <Badge variant="secondary">Top-Level</Badge>
+            )}
+        </div>
+      </div>
     </Card>
   )
 }
