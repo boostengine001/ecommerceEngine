@@ -22,6 +22,7 @@ import {
   Moon,
   Sun,
   ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -159,6 +160,11 @@ export default function AdminLayout({
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
           <SidebarTrigger className="sm:hidden" />
           <div className="flex-1" />
+           <Button asChild variant="ghost" size="icon" className="h-9 w-9">
+            <Link href="/" target="_blank" aria-label="Back to site">
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+          </Button>
           <ThemeToggle />
           <UserNav />
         </header>
