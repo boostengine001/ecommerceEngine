@@ -31,6 +31,9 @@ interface CreateOrderPayload {
         variantSku?: string; // The specific variant SKU
     }[],
     totalAmount: number;
+    originalAmount: number;
+    discountAmount: number;
+    couponCode?: string;
 }
 
 export async function createOrder(payload: CreateOrderPayload) {
@@ -55,7 +58,10 @@ export async function createOrder(payload: CreateOrderPayload) {
         orderId: orderId,
         user: user._id,
         items: orderItems.map(item => item._id),
+        originalAmount: payload.originalAmount,
+        discountAmount: payload.discountAmount,
         totalAmount: payload.totalAmount,
+        couponCode: payload.couponCode,
         shippingAddress: payload.shippingAddress,
         status: 'Pending',
     });

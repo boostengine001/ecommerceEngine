@@ -34,7 +34,14 @@ const formSchema = z.object({
   phone: z.string().min(10, "Phone number is required"),
 });
 
-export default function CheckoutForm() {
+interface CheckoutFormProps {
+    totalAmount: number;
+    discount: number;
+    couponCode?: string;
+}
+
+
+export default function CheckoutForm({ totalAmount, discount, couponCode }: CheckoutFormProps) {
   const router = useRouter();
   const { cartItems, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
@@ -65,7 +72,10 @@ export default function CheckoutForm() {
                 price: item.price,
                 variantSku: item.id.includes('-') ? item.id : undefined
             })),
-            totalAmount: totalPrice
+            totalAmount: totalAmount,
+            originalAmount: totalPrice,
+            discountAmount: discount,
+            couponCode: couponCode
         }
 
         const serverOrder = await createOrder(orderPayload);
@@ -165,7 +175,7 @@ export default function CheckoutForm() {
               </div>
               <Button type="submit" className="w-full !mt-6" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                {loading ? "Processing..." : `Pay ${formatPrice(totalPrice)}`}
+                {loading ? "Processing..." : `Pay ${formatPrice(totalAmount)}`}
               </Button>
             </CardContent>
         </form>

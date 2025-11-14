@@ -4,21 +4,60 @@
 import CheckoutForm from "@/components/checkout/checkout-form";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
+import { applyCoupon } from "@/lib/actions/coupon.actions";
+import type { ICoupon } from "@/models/Coupon";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, totalItems } = useCart();
   const router = useRouter();
+  const { toast } = useToast();
+
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<ICoupon | null>(null);
+  const [discount, setDiscount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   useEffect(() => {
     if (totalItems === 0) {
       router.replace('/');
     }
   }, [totalItems, router]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setCouponLoading(true);
+    try {
+      const result = await applyCoupon(couponCode, totalPrice);
+      if (result.success && result.coupon && result.discount) {
+        setAppliedCoupon(result.coupon);
+        setDiscount(result.discount);
+        toast({ title: "Coupon Applied", description: `Discount of ${formatPrice(result.discount)} applied.`});
+      } else {
+        toast({ variant: "destructive", title: "Invalid Coupon", description: result.error });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Could not apply coupon." });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscount(0);
+    setCouponCode('');
+  };
+
+
+  const finalTotal = totalPrice - discount;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -66,6 +105,24 @@ export default function CheckoutPage() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatPrice(totalPrice)}</span>
                 </div>
+                 {!appliedCoupon ? (
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        placeholder="Coupon code" 
+                        value={couponCode} 
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        disabled={couponLoading}
+                      />
+                      <Button onClick={handleApplyCoupon} disabled={!couponCode || couponLoading}>
+                        {couponLoading ? "Applying..." : "Apply"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-destructive">
+                      <span>Discount ({appliedCoupon.code})</span>
+                      <span>- {formatPrice(discount)}</span>
+                    </div>
+                  )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
                   <span>Free</span>
@@ -73,14 +130,19 @@ export default function CheckoutPage() {
                 <Separator className="my-2"/>
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>{formatPrice(totalPrice)}</span>
+                  <span>{formatPrice(finalTotal)}</span>
                 </div>
+                {appliedCoupon && <Button variant="link" size="sm" className="p-0 h-auto" onClick={handleRemoveCoupon}>Remove Coupon</Button>}
               </div>
             </CardContent>
           </Card>
         </div>
         <div className="lg:order-first">
-          <CheckoutForm />
+          <CheckoutForm 
+            totalAmount={finalTotal}
+            discount={discount}
+            couponCode={appliedCoupon?.code}
+          />
         </div>
       </div>
     </div>

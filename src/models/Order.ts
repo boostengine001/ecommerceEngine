@@ -15,7 +15,10 @@ export interface IOrder extends Document {
   orderId: string; // User-friendly order ID
   user: Types.ObjectId | IUser;
   items: (Types.ObjectId | IOrderItem)[];
+  originalAmount: number;
+  discountAmount: number;
   totalAmount: number;
+  couponCode?: string;
   shippingAddress: {
     name: string;
     address: string;
@@ -52,7 +55,10 @@ const OrderSchema: Schema = new Schema({
   orderId: { type: String, required: true, unique: true },
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   items: [{ type: Schema.Types.ObjectId, ref: 'OrderItem' }],
+  originalAmount: { type: Number, required: true },
+  discountAmount: { type: Number, default: 0 },
   totalAmount: { type: Number, required: true },
+  couponCode: { type: String },
   shippingAddress: { type: ShippingAddressSchema, required: true },
   status: { 
     type: String, 

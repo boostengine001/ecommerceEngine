@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   ExternalLink,
   Megaphone,
+  TicketPercent,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -106,6 +107,11 @@ export default function AdminLayout({
         href: '/admin/marketing',
         label: 'Marketing',
         icon: Megaphone,
+    },
+    {
+        href: '/admin/discounts',
+        label: 'Discounts',
+        icon: TicketPercent,
     },
     {
       href: '/admin/analytics',
