@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -68,9 +69,9 @@ export default function AnalyticsPage() {
     const totalCustomers = users.length;
 
     const productSales = successfulOrders.reduce((acc, order) => {
-        order.items.forEach((item: IOrderItem) => {
+        order.items.forEach((item: any) => { // Use any to access populated product
             const productId = item.product?._id?.toString();
-            if (productId) {
+            if (productId && item.product?.name) {
                  if (!acc[productId]) {
                     acc[productId] = { name: item.product.name, sales: 0 };
                 }

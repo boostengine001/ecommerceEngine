@@ -122,8 +122,16 @@ export async function verifyPayment(data: {
 
 export async function getOrders(): Promise<IOrder[]> {
     await dbConnect();
+    await Product.find({}); // Ensure product model is registered
     const orders = await Order.find({})
       .populate('user', 'firstName lastName email')
+      .populate({
+        path: 'items',
+        populate: {
+          path: 'product',
+          model: 'Product'
+        }
+      })
       .sort({ createdAt: -1 })
       .lean();
     return JSON.parse(JSON.stringify(orders));
