@@ -17,6 +17,7 @@ import type { IUser } from '@/models/User';
 export type ClientUser = Omit<IUser, 'password'> & {
   id: string;
   displayName: string;
+  avatar?: string;
 };
 
 export interface AuthContextType {
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 ...JSON.parse(JSON.stringify(sessionUser)),
                 id: sessionUser._id,
                 displayName: `${sessionUser.firstName} ${sessionUser.lastName}`,
+                avatar: sessionUser.avatar
             };
             setUser(clientUser);
         } else {
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...JSON.parse(JSON.stringify(loggedInUser)), // Ensure serializable
         id: loggedInUser._id,
         displayName: `${loggedInUser.firstName} ${loggedInUser.lastName}`,
+        avatar: loggedInUser.avatar
       };
       setUser(clientUser);
     } catch (error) {
@@ -91,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...JSON.parse(JSON.stringify(newUser)), // Ensure serializable
           id: newUser._id,
           displayName: `${newUser.firstName} ${newUser.lastName}`,
+          avatar: newUser.avatar,
         };
         setUser(clientUser);
       } catch (error) {

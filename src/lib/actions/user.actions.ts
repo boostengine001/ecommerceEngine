@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import dbConnect from '../db';
@@ -10,6 +9,7 @@ import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { sign, verify } from 'jsonwebtoken';
 import { revalidatePath } from 'next/cache';
+import { uploadFile } from '../s3';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const COOKIE_NAME = 'session_token';
@@ -26,14 +26,19 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-const profileUpdateSchema = z.object({
-    id: z.string(),
-    firstName: z.string().min(1).optional(),
-    lastName: z.string().min(1).optional(),
-    currentPassword: z.string().optional(),
-    newPassword: z.string().optional(),
-});
-
+async function uploadImage(file: File): Promise<string | null> {
+  if (!file || file.size === 0) {
+    return null;
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const fileName = `avatar-${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+  try {
+    const url = await uploadFile(buffer, fileName);
+    return url;
+  } catch (error) {
+    throw new Error("Failed to upload avatar image.");
+  }
+}
 
 async function createSession(userId: string) {
   const token = sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
@@ -175,23 +180,24 @@ export async function updateUser(formData: FormData) {
   revalidatePath(`/admin/customers/${id}/edit`);
 }
 
-export async function updateUserProfile(data: unknown) {
-    const result = profileUpdateSchema.safeParse(data);
-    if (!result.success) {
-        throw new Error('Invalid data provided.');
-    }
-    
-    const { id, firstName, lastName, currentPassword, newPassword } = result.data;
-
+export async function updateUserProfile(formData: FormData) {
     await dbConnect();
+    
+    const id = formData.get('id') as string;
     const user = await User.findById(id).select('+password');
 
     if (!user) {
         throw new Error('User not found.');
     }
 
+    const firstName = formData.get('firstName') as string;
     if (firstName) user.firstName = firstName;
+
+    const lastName = formData.get('lastName') as string;
     if (lastName) user.lastName = lastName;
+    
+    const currentPassword = formData.get('currentPassword') as string;
+    const newPassword = formData.get('newPassword') as string;
 
     if (currentPassword && newPassword) {
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
@@ -201,6 +207,19 @@ export async function updateUserProfile(data: unknown) {
         user.password = await bcrypt.hash(newPassword, 10);
     }
     
+    const avatarFile = formData.get('avatar') as File | null;
+    if (avatarFile && avatarFile.size > 0) {
+        const avatarUrl = await uploadImage(avatarFile);
+        if(avatarUrl) {
+            user.avatar = avatarUrl;
+        }
+    } else if (!formData.has('currentImage')) {
+        // If currentImage is not present, it means it was removed.
+        user.avatar = undefined;
+    }
+
+
     await user.save();
     revalidatePath('/profile');
+    revalidatePath('.', 'layout'); // Revalidate layout to update UserNav avatar
 }

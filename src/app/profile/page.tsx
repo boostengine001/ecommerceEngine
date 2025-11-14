@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { updateUserProfile } from '@/lib/actions/user.actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import ImageDropzone from '@/components/admin/image-dropzone';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -43,15 +44,14 @@ function ProfileForm({ user }: { user: ClientUser }) {
       email: user.email || '',
     },
   });
-
-  const onProfileSubmit = async (values: z.infer<typeof profileSchema>) => {
+  
+  const handleProfileSubmit = async (data: any) => {
     setLoading(true);
+    const formData = new FormData(data.currentTarget);
+    formData.append('id', user.id);
+    
     try {
-        await updateUserProfile({
-            id: user.id,
-            firstName: values.firstName,
-            lastName: values.lastName,
-        });
+        await updateUserProfile(formData);
         toast({ title: 'Profile Updated', description: 'Your information has been saved.' });
     } catch (error) {
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to update profile.' });
@@ -62,52 +62,34 @@ function ProfileForm({ user }: { user: ClientUser }) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Personal Information</CardTitle>
-        <CardDescription>Update your name and email address.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onProfileSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <form onSubmit={handleProfileSubmit}>
+        <CardHeader>
+          <CardTitle>Personal Information</CardTitle>
+          <CardDescription>Update your name, email address and profile picture.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label>Profile Picture</Label>
+                <ImageDropzone name="avatar" initialImage={user.avatar} />
             </div>
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl><Input {...field} readOnly disabled /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
-          </form>
-        </Form>
-      </CardContent>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor='firstName'>First Name</Label>
+                    <Input id='firstName' name='firstName' defaultValue={user.firstName} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor='lastName'>Last Name</Label>
+                    <Input id='lastName' name='lastName' defaultValue={user.lastName} />
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type='email' value={user.email} readOnly disabled />
+            </div>
+          <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
+        </CardContent>
+      </form>
     </Card>
   );
 }
@@ -122,12 +104,14 @@ function PasswordForm({ userId }: { userId: string }) {
 
     const onPasswordSubmit = async (values: z.infer<typeof passwordSchema>) => {
         setLoading(true);
+        
+        const formData = new FormData();
+        formData.append('id', userId);
+        formData.append('currentPassword', values.currentPassword);
+        formData.append('newPassword', values.newPassword);
+        
         try {
-            await updateUserProfile({
-                id: userId,
-                currentPassword: values.currentPassword,
-                newPassword: values.newPassword,
-            });
+            await updateUserProfile(formData);
             toast({ title: 'Password Updated', description: 'Your password has been changed successfully.' });
             form.reset();
         } catch (error: any) {

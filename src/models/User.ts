@@ -8,6 +8,7 @@ export interface IUser extends Document {
   lastName: string;
   email: string;
   password?: string;
+  avatar?: string;
   role: mongoose.Types.ObjectId | IRole;
   googleId?: string;
   createdAt: Date;
@@ -19,6 +20,7 @@ const UserSchema: Schema = new Schema({
   lastName: { type: String, required: [true, 'Last name is required.'], trim: true },
   email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
   password: { type: String, required: false, select: false }, 
+  avatar: { type: String },
   role: { type: Schema.Types.ObjectId, ref: 'Role', required: false },
   googleId: { type: String, unique: true, sparse: true },
 }, { timestamps: true });

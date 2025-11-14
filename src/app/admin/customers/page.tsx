@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -36,7 +37,7 @@ function CustomerCard({ user }: { user: IUser }) {
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
         <Avatar className="h-12 w-12">
-            <AvatarImage src={`https://i.pravatar.cc/40?u=${user.email}`} alt={`${user.firstName} ${user.lastName}`} />
+            <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
             <AvatarFallback>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
@@ -122,7 +123,7 @@ export default async function AdminCustomersPage() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={`https://i.pravatar.cc/40?u=${user.email}`} alt={`${user.firstName} ${user.lastName}`} />
+                          <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
                           <AvatarFallback>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span>{user.firstName} {user.lastName}</span>

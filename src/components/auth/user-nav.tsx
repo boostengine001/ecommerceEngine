@@ -37,7 +37,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.displayName || "user"} />
+            <AvatarImage src={user.avatar} alt={user.displayName || "user"} />
             <AvatarFallback>{user.displayName ? user.displayName.charAt(0) : user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
         </Button>
