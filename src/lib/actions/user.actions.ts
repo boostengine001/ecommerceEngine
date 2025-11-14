@@ -126,6 +126,36 @@ export async function login(data: unknown) {
     return JSON.parse(JSON.stringify(userObject));
 }
 
+export async function findOrCreateUserFromGoogle(profile: { email: string, firstName: string, lastName: string, googleId: string }) {
+    await dbConnect();
+    
+    let user = await User.findOne({ email: profile.email });
+
+    if (user) {
+        // User exists, log them in by creating a session
+        await createSession(user._id);
+    } else {
+        // User does not exist, create a new one
+        // We generate a secure random password as it's a required field, 
+        // but it won't be used for login.
+        const randomPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+        user = new User({
+            email: profile.email,
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            password: randomPassword, // Satisfy schema, but won't be used
+            // You could also add a field like 'authProvider: "google"'
+        });
+        await user.save();
+        await createSession(user._id);
+    }
+
+    const userObject = user.toObject();
+    delete userObject.password;
+    return JSON.parse(JSON.stringify(userObject));
+}
+
+
 export async function getUsers(): Promise<IUser[]> {
     await dbConnect();
     // Eagerly import Role model to prevent MissingSchemaError

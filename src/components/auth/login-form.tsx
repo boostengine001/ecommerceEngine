@@ -13,10 +13,11 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Eye, EyeOff } from 'lucide-react';
 import { Separator } from '../ui/separator';
+import { signIn } from 'next-auth/react';
 
 // Simple SVG for Google icon
 const GoogleIcon = () => (
-  <svg className="h-5 w-5" viewBox="0 0 24 24">
+  <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
     <path
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
       fill="#4285F4"
@@ -64,6 +65,22 @@ export function LoginForm() {
     } catch (error: any) {
       console.error(error);
       toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      await signIn('google', { callbackUrl: '/' });
+    } catch (error) {
+      console.error("Google sign-in error", error);
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: "Could not sign in with Google. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -125,7 +142,7 @@ export function LoginForm() {
           </span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" disabled>
+      <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
         <GoogleIcon />
         Login with Google
       </Button>

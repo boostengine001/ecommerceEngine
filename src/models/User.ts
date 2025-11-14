@@ -9,6 +9,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   role: mongoose.Types.ObjectId | IRole;
+  googleId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,8 +18,18 @@ const UserSchema: Schema = new Schema({
   firstName: { type: String, required: [true, 'First name is required.'], trim: true },
   lastName: { type: String, required: [true, 'Last name is required.'], trim: true },
   email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
-  password: { type: String, required: true, select: false }, 
+  password: { type: String, required: false, select: false }, 
   role: { type: Schema.Types.ObjectId, ref: 'Role', required: false },
+  googleId: { type: String, unique: true, sparse: true },
 }, { timestamps: true });
+
+UserSchema.pre('save', function(next) {
+    if (!this.password && !this.googleId) {
+        next(new Error('A password is required if not signing up with Google.'));
+    } else {
+        next();
+    }
+});
+
 
 export default models.User || model<IUser>('User', UserSchema);
