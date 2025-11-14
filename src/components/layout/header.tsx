@@ -31,23 +31,27 @@ import type { ICategory } from '@/models/Category';
 import SearchSuggestions from '../search/search-suggestions';
 
 function MainNav({ categories }: { categories: ICategory[] }) {
-  const topLevelCategories = useMemo(() => {
-    const categoryMap: Record<string, { category: ICategory, children: ICategory[] }> = {};
+  const categoryMap = useMemo(() => {
+    const map: Record<string, { category: ICategory, children: ICategory[] }> = {};
     categories.forEach(category => {
-      if (!category.parent) {
-        if (!categoryMap[category._id]) {
-          categoryMap[category._id] = { category, children: [] };
+      const parentId = (category.parent as ICategory)?._id || category._id;
+      
+      if (!map[parentId]) {
+        // Find or create the top-level category entry
+        const topLevelCat = categories.find(c => c._id === parentId);
+        if (topLevelCat) {
+          map[parentId] = { category: topLevelCat, children: [] };
         }
-      } else {
-        const parentId = (category.parent as ICategory)._id;
-        if (!categoryMap[parentId]) {
-          categoryMap[parentId] = { category: category.parent as ICategory, children: [] };
-        }
-        categoryMap[parentId].children.push(category);
+      }
+
+      if (category.parent) {
+          map[parentId].children.push(category);
       }
     });
-    return Object.values(categoryMap).sort((a,b) => a.category.name.localeCompare(b.category.name));
+    return Object.values(map).sort((a,b) => a.category.name.localeCompare(b.category.name));
   }, [categories]);
+
+  const topLevelCategories = categoryMap.map(item => item.category);
 
   return (
     <NavigationMenu className="hidden lg:flex">
@@ -55,42 +59,53 @@ function MainNav({ categories }: { categories: ICategory[] }) {
         <NavigationMenuItem>
           <NavigationMenuTrigger>Shop</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <div className="grid w-[600px] grid-cols-3 gap-6 p-4">
-              <div className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2">
-                {topLevelCategories.map((group) => (
-                  <div key={group.category._id} className="flex flex-col space-y-2">
-                    <NavigationMenuLink asChild>
-                      <Link href={`/category/${group.category.slug}`} className="font-bold text-foreground hover:text-primary">
-                        {group.category.name}
-                      </Link>
-                    </NavigationMenuLink>
-                    {group.children.slice(0, 4).map(child => (
-                      <NavigationMenuListItem key={child._id} href={`/category/${child.slug}`} title={child.name} />
-                    ))}
-                    {group.children.length > 4 && (
-                       <Link href={`/category/${group.category.slug}`} className="text-sm font-medium text-primary hover:underline mt-1">
-                          View All
-                        </Link>
-                    )}
+            <div className="grid w-[800px] grid-cols-4 gap-6 p-4">
+              {categoryMap.slice(0, 2).map((group) => (
+                 <div key={group.category._id} className="flex flex-col">
+                   <div className="group relative h-40 w-full overflow-hidden rounded-md">
+                     <Link href={`/category/${group.category.slug}`} className="block h-full w-full">
+                       <Image
+                         src={group.category.image}
+                         alt={group.category.name}
+                         fill
+                         className="object-cover transition-transform duration-300 group-hover:scale-105"
+                       />
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                       <div className="absolute bottom-0 p-3 text-white">
+                         <h4 className="text-lg font-bold">{group.category.name}</h4>
+                       </div>
+                     </Link>
+                   </div>
+                   <ul className="mt-2 space-y-1">
+                      {group.children.slice(0, 4).map(child => (
+                        <li key={child._id}>
+                          <NavigationMenuListItem href={`/category/${child.slug}`} title={child.name} />
+                        </li>
+                      ))}
+                   </ul>
+                 </div>
+              ))}
+              <div className="flex flex-col space-y-4">
+                {categoryMap.slice(2, 5).map(group => (
+                  <div key={group.category._id}>
+                    <Link href={`/category/${group.category.slug}`} className="font-bold text-foreground hover:text-primary">
+                      {group.category.name}
+                    </Link>
+                    <ul className="mt-1 space-y-1">
+                       {group.children.slice(0, 3).map(child => (
+                        <li key={child._id}>
+                          <NavigationMenuListItem href={`/category/${child.slug}`} title={child.name} />
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>
-              <div className="flex flex-col justify-between">
-                <div className="group relative h-full w-full overflow-hidden rounded-md bg-muted">
-                   <Link href="/products/soundscape-pro">
-                    <Image
-                      src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600"
-                      alt="Featured Headphones"
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-0 p-4 text-white">
-                      <h4 className="text-lg font-bold">Featured Product</h4>
-                      <p className="text-sm">SoundScape Pro Headphones</p>
-                    </div>
-                  </Link>
-                </div>
+               <div className="flex flex-col justify-between rounded-md bg-muted p-4">
+                 <div>
+                    <h4 className="text-lg font-bold">New Arrivals</h4>
+                    <p className="mt-1 text-sm text-muted-foreground">The latest trends and styles, updated daily.</p>
+                 </div>
                  <Button variant="outline" asChild className="mt-4 w-full">
                   <Link href="/shop">
                     Shop All Products <ArrowRight className="ml-2 h-4 w-4" />
@@ -100,11 +115,11 @@ function MainNav({ categories }: { categories: ICategory[] }) {
             </div>
           </NavigationMenuContent>
         </NavigationMenuItem>
-         {topLevelCategories.slice(0,4).map(group => (
-          <NavigationMenuItem key={group.category._id}>
-            <Link href={`/category/${group.category.slug}`} legacyBehavior passHref>
+         {topLevelCategories.slice(0,4).map(cat => (
+          <NavigationMenuItem key={cat._id}>
+            <Link href={`/category/${cat.slug}`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                {group.category.name}
+                {cat.name}
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
