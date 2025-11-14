@@ -35,7 +35,7 @@ export default function CategorySection() {
           <h2 className="text-4xl font-bold tracking-tight">Shop by Category</h2>
           <p className="mt-2 text-lg text-muted-foreground">Explore our curated product categories.</p>
         </div>
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="group flex flex-col overflow-hidden">
                 <CardHeader className="p-0">
@@ -64,7 +64,7 @@ export default function CategorySection() {
         <h2 className="text-4xl font-bold tracking-tight">Shop by Category</h2>
         <p className="mt-2 text-lg text-muted-foreground">Explore our curated product categories.</p>
       </div>
-      <div className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => (
           <Card key={category._id} className="group flex flex-col overflow-hidden">
             <Link href={`/category/${category.slug}`} className="block">

@@ -36,7 +36,7 @@ export default function FeaturedProductsSection() {
           <h2 className="text-4xl font-bold tracking-tight">Featured Products</h2>
           <p className="mt-2 text-lg text-muted-foreground">Check out our latest products.</p>
         </div>
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="flex flex-col space-y-3">
               <Skeleton className="aspect-square w-full rounded-xl" />
@@ -61,7 +61,7 @@ export default function FeaturedProductsSection() {
         <h2 className="text-4xl font-bold tracking-tight">Featured Products</h2>
         <p className="mt-2 text-lg text-muted-foreground">Check out our latest products.</p>
       </div>
-      <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {newArrivals.map((product) => (
           <ProductCard key={product._id} product={product as any} />
         ))}

@@ -94,19 +94,25 @@ export default function ProductCard({ product }: ProductCardProps) {
           </Link>
         </CardTitle>
         <div className="flex-grow" />
-        <div className="flex items-baseline gap-2">
-            <p className={`font-headline text-xl font-semibold ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
-                {formatPrice(isOnSale ? product.salePrice! : product.price)}
-            </p>
-            {isOnSale && (
-                <p className="text-sm text-muted-foreground line-through">
-                    {formatPrice(product.price)}
+        <div className="flex items-baseline justify-between gap-2">
+            <div className="flex flex-col">
+                <p className={`font-headline text-xl font-semibold ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
+                    {formatPrice(isOnSale ? product.salePrice! : product.price)}
                 </p>
-            )}
+                {isOnSale && (
+                    <p className="text-sm text-muted-foreground line-through">
+                        {formatPrice(product.price)}
+                    </p>
+                )}
+            </div>
+             <Button onClick={handleAddToCart} size="icon" className="h-9 w-9 shrink-0 md:hidden">
+                <PlusCircle className="h-5 w-5" />
+                <span className="sr-only">Add to Cart</span>
+            </Button>
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button onClick={handleAddToCart} className="w-full">
+         <Button onClick={handleAddToCart} className="w-full hidden md:flex">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add to Cart
         </Button>
