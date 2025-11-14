@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, Heart, Menu } from 'lucide-react';
+import { ShoppingBag, Search, Heart, Menu, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/use-cart';
 import { CartSheet } from '@/components/cart/cart-sheet';
@@ -12,9 +12,12 @@ import { useSettings } from '@/hooks/use-settings';
 import Image from 'next/image';
 import {
   NavigationMenu,
+  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
+  NavigationMenuListItem,
   NavigationMenuList,
+  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import {
@@ -28,23 +31,80 @@ import type { ICategory } from '@/models/Category';
 import SearchSuggestions from '../search/search-suggestions';
 
 function MainNav({ categories }: { categories: ICategory[] }) {
-  const topLevelCategories = useMemo(() => categories.filter(c => !c.parent).slice(0, 5), [categories]);
+  const topLevelCategories = useMemo(() => {
+    const categoryMap: Record<string, { category: ICategory, children: ICategory[] }> = {};
+    categories.forEach(category => {
+      if (!category.parent) {
+        if (!categoryMap[category._id]) {
+          categoryMap[category._id] = { category, children: [] };
+        }
+      } else {
+        const parentId = (category.parent as ICategory)._id;
+        if (!categoryMap[parentId]) {
+          categoryMap[parentId] = { category: category.parent as ICategory, children: [] };
+        }
+        categoryMap[parentId].children.push(category);
+      }
+    });
+    return Object.values(categoryMap).sort((a,b) => a.category.name.localeCompare(b.category.name));
+  }, [categories]);
 
   return (
     <NavigationMenu className="hidden lg:flex">
       <NavigationMenuList>
         <NavigationMenuItem>
-          <Link href="/shop" legacyBehavior passHref>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              Shop All
-            </NavigationMenuLink>
-          </Link>
+          <NavigationMenuTrigger>Shop</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid w-[600px] grid-cols-3 gap-6 p-4">
+              <div className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                {topLevelCategories.map((group) => (
+                  <div key={group.category._id} className="flex flex-col space-y-2">
+                    <NavigationMenuLink asChild>
+                      <Link href={`/category/${group.category.slug}`} className="font-bold text-foreground hover:text-primary">
+                        {group.category.name}
+                      </Link>
+                    </NavigationMenuLink>
+                    {group.children.slice(0, 4).map(child => (
+                      <NavigationMenuListItem key={child._id} href={`/category/${child.slug}`} title={child.name} />
+                    ))}
+                    {group.children.length > 4 && (
+                       <Link href={`/category/${group.category.slug}`} className="text-sm font-medium text-primary hover:underline mt-1">
+                          View All
+                        </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col justify-between">
+                <div className="group relative h-full w-full overflow-hidden rounded-md bg-muted">
+                   <Link href="/products/soundscape-pro">
+                    <Image
+                      src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600"
+                      alt="Featured Headphones"
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className="absolute bottom-0 p-4 text-white">
+                      <h4 className="text-lg font-bold">Featured Product</h4>
+                      <p className="text-sm">SoundScape Pro Headphones</p>
+                    </div>
+                  </Link>
+                </div>
+                 <Button variant="outline" asChild className="mt-4 w-full">
+                  <Link href="/shop">
+                    Shop All Products <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </NavigationMenuContent>
         </NavigationMenuItem>
-        {topLevelCategories.map(category => (
-          <NavigationMenuItem key={category._id}>
-            <Link href={`/category/${category.slug}`} legacyBehavior passHref>
+         {topLevelCategories.slice(0,4).map(group => (
+          <NavigationMenuItem key={group.category._id}>
+            <Link href={`/category/${group.category.slug}`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                {category.name}
+                {group.category.name}
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
