@@ -111,7 +111,7 @@ export default function Footer() {
                 <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                     {settings.phone && (
                         <li>
-                            <a href={`tel:${settings.phone}`} className="inline-flex items-center gap-2 hover:text-primary">
+                            <a href={`tel:${settings.phone}`} className="inline-flex items-center gap-2 hover:text-primary break-all">
                                 <Phone className="h-4 w-4" />
                                 {settings.phone}
                             </a>
@@ -119,7 +119,7 @@ export default function Footer() {
                     )}
                     {settings.contactEmail && (
                          <li>
-                            <a href={`mailto:${settings.contactEmail}`} className="inline-flex items-center gap-2 hover:text-primary">
+                            <a href={`mailto:${settings.contactEmail}`} className="inline-flex items-center gap-2 hover:text-primary break-all">
                                 <Mail className="h-4 w-4" />
                                 {settings.contactEmail}
                             </a>
