@@ -10,6 +10,7 @@ import ProductMediaGallery from '@/components/products/product-media-gallery';
 import { getReviewsForProduct } from '@/lib/actions/review.actions';
 import ProductReviews from '@/components/products/product-reviews';
 import { Star } from 'lucide-react';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 interface ProductPageProps {
   params: {
@@ -58,7 +59,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <ProductMediaGallery media={product.media || []} isOnSale={!!isOnSale} alt={product.name}/>
 
         <div className="flex flex-col">
-          <h1 className="text-4xl font-bold">{product.name}</h1>
+          <h1 className="text-3xl font-bold md:text-4xl">{product.name}</h1>
            <div className="mt-4 flex items-center gap-2">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
@@ -68,11 +69,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <span className="text-muted-foreground">({product.numReviews} reviews)</span>
           </div>
           <div className="mt-4 flex items-baseline gap-4">
-             <p className={`font-headline text-4xl font-bold ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
+             <p className={`font-headline text-3xl font-bold md:text-4xl ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
                 {formatPrice(isOnSale ? product.salePrice! : product.price)}
             </p>
             {isOnSale && (
-                <p className="text-2xl text-muted-foreground line-through">
+                <p className="text-xl text-muted-foreground line-through md:text-2xl">
                     {formatPrice(product.price)}
                 </p>
             )}
@@ -87,15 +88,47 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
        <div className="mt-16">
         <Tabs defaultValue="reviews">
-          <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 md:w-auto md:inline-flex">
             <TabsTrigger value="description">Full Description</TabsTrigger>
+            <TabsTrigger value="specifications">Specifications</TabsTrigger>
             <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="mt-6">
             <Card>
                 <CardContent className="p-6 text-muted-foreground prose max-w-none">
                     <p>{product.description}</p>
-                    {/* Add more detailed description if available */}
+                </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="specifications" className="mt-6">
+            <Card>
+                <CardContent className="p-6">
+                    <Table>
+                        <TableBody>
+                            {product.weight && (
+                                <TableRow>
+                                    <TableCell className="font-medium">Weight</TableCell>
+                                    <TableCell>{product.weight} kg</TableCell>
+                                </TableRow>
+                            )}
+                            {product.dimensions && (
+                                <>
+                                <TableRow>
+                                    <TableCell className="font-medium">Length</TableCell>
+                                    <TableCell>{product.dimensions.length} cm</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Width</TableCell>
+                                    <TableCell>{product.dimensions.width} cm</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Height</TableCell>
+                                    <TableCell>{product.dimensions.height} cm</TableCell>
+                                </TableRow>
+                                </>
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
           </TabsContent>

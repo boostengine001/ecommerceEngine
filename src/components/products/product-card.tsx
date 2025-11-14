@@ -74,7 +74,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Button
               size="icon"
               variant="secondary"
-              className="absolute bottom-2 right-2 z-10 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm transition-all hover:bg-background md:hidden"
+              className="absolute bottom-2 right-2 z-10 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity md:hidden"
               onClick={handleAddToCart}
             >
               <PlusCircle className="h-5 w-5" />
@@ -97,7 +97,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col p-4">
-        <CardTitle className="mb-2 text-lg font-medium">
+        <CardTitle className="mb-2 text-base font-medium md:text-lg">
           <Link href={`/products/${product.slug}`} className="hover:text-primary">
             {product.name}
           </Link>
@@ -105,7 +105,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex-grow" />
         <div className="mt-2 flex items-end justify-between gap-4">
           <div className="grid gap-0.5">
-            <p className={`font-headline text-xl font-semibold ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
+            <p className={`font-headline text-lg font-semibold md:text-xl ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
               {formatPrice(isOnSale ? product.salePrice! : product.price)}
             </p>
             {isOnSale && (
