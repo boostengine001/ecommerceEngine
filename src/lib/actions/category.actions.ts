@@ -86,6 +86,23 @@ export async function getCategory(id: string): Promise<ICategory | null> {
   return JSON.parse(JSON.stringify(category));
 }
 
+export async function getCategoryWithDescendants(slug: string): Promise<{ category: ICategory; descendantIds: string[] } | null> {
+    await dbConnect();
+    const category = await Category.findOne({ slug }).lean();
+    if (!category) {
+        return null;
+    }
+
+    const descendants = await Category.find({ 'ancestors._id': category._id }).lean();
+    const descendantIds = descendants.map(d => d._id.toString());
+    
+    return {
+        category: JSON.parse(JSON.stringify(category)),
+        descendantIds
+    };
+}
+
+
 export async function updateCategory(id: string, formData: FormData) {
   await dbConnect();
 

@@ -23,7 +23,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { getAllCategories } from '@/lib/actions/category.actions';
+import { getCategoryWithDescendants } from '@/lib/actions/category.actions';
 import { getProducts } from '@/lib/actions/product.actions';
 import type { ICategory } from '@/models/Category';
 import type { IProduct } from '@/models/Product';
@@ -44,15 +44,16 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [allCategories, allProducts] = await Promise.all([
-          getAllCategories(),
+        const [categoryData, allProducts] = await Promise.all([
+          getCategoryWithDescendants(slug),
           getProducts(),
         ]);
         
-        const currentCategory = allCategories.find(c => c.slug === slug);
-        if (currentCategory) {
+        if (categoryData) {
+          const { category: currentCategory, descendantIds } = categoryData;
           setCategory(currentCategory);
-          const categoryProducts = allProducts.filter(p => (p.category as ICategory)._id.toString() === currentCategory._id);
+          const categoryIds = [currentCategory._id, ...descendantIds];
+          const categoryProducts = allProducts.filter(p => categoryIds.includes((p.category as ICategory)._id.toString()));
           setProducts(categoryProducts);
         } else {
           // Handle category not found

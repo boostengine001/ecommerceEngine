@@ -16,7 +16,7 @@ export default function CategorySection() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const topLevelCategories = (await getAllCategories()).filter(c => !c.parent).slice(0, 3);
+        const topLevelCategories = (await getAllCategories()).filter(c => !c.parent);
         setCategories(topLevelCategories);
       } catch (error) {
         console.error("Failed to fetch categories", error);
