@@ -31,8 +31,8 @@ export default async function AuthLayout({
   const authImage: { title: string; image: string } = await getAuthImage();
 
   return (
-    <div className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
-      <div className="hidden bg-muted lg:block">
+    <div className="grid min-h-screen w-full grid-cols-1 md:grid-cols-2">
+      <div className="hidden bg-muted md:block">
         <div className="relative h-full">
             <Image 
             src={authImage.image}
