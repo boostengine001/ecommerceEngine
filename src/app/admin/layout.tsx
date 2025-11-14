@@ -108,6 +108,13 @@ export default function AdminLayout({
     },
   ];
 
+  const isMenuItemActive = (href: string) => {
+    if (href === '/admin') {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
@@ -125,7 +132,7 @@ export default function AdminLayout({
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/admin')}
+                  isActive={isMenuItemActive(item.href)}
                   tooltip={{
                     children: item.label,
                   }}
