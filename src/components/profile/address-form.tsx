@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/ui/phone-input';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { IAddress } from '@/models/User';
 import { Switch } from '../ui/switch';
 import { useState } from 'react';
@@ -18,7 +18,7 @@ export const addressSchema = z.object({
   address: z.string().min(5, "Address is required"),
   city: z.string().min(2, "City is required"),
   zip: z.string().min(5, "ZIP code is required"),
-  phone: z.string().refine(isValidPhoneNumber, { message: "Invalid phone number" }),
+  phone: z.string().refine(value => isValidPhoneNumber(value || ''), { message: "Invalid phone number" }),
   isDefault: z.boolean().optional(),
 });
 
@@ -64,13 +64,19 @@ export function AddressForm({ onSubmit, initialData }: AddressFormProps) {
             <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
           )} />
         </div>
-        <FormField control={form.control} name="phone" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Phone Number</FormLabel>
-            <FormControl><PhoneInput international defaultCountry="IN" {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <PhoneInput international defaultCountry="IN" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
          <FormField
           control={form.control}
           name="isDefault"

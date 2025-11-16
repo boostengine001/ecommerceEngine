@@ -36,7 +36,7 @@ const formSchema = z.object({
   city: z.string().min(2, "City is required"),
   zip: z.string().min(5, "ZIP code is required"),
   email: z.string().email(),
-  phone: z.string().refine(isValidPhoneNumber, { message: "Invalid phone number" }),
+  phone: z.string().refine(value => isValidPhoneNumber(value || ''), { message: "Invalid phone number" }),
 });
 
 interface CheckoutFormProps {
@@ -207,9 +207,19 @@ export default function CheckoutForm({ totalAmount, discount, couponCode }: Chec
                     <FormField control={form.control} name="email" render={({ field }) => (
                         <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} disabled={!!user} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField control={form.control} name="phone" render={({ field }) => (
-                        <FormItem><FormLabel>Phone</FormLabel><FormControl><PhoneInput international defaultCountry="IN" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <PhoneInput international defaultCountry="IN" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField control={form.control} name="address" render={({ field }) => (
                         <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />

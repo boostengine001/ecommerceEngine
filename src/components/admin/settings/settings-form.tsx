@@ -41,7 +41,7 @@ import { isValidPhoneNumber } from 'libphonenumber-js';
 
 const phoneSchema = z.string().refine((value) => {
     if (!value) return true; // Allow empty string
-    return isValidPhoneNumber(value);
+    return isValidPhoneNumber(value || '');
 }, {
     message: 'Invalid phone number'
 });
@@ -205,7 +205,7 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                             <FormItem>
                               <FormLabel>Phone Number</FormLabel>
                               <FormControl>
-                                <PhoneInput {...field} />
+                                <PhoneInput international defaultCountry="IN" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -219,7 +219,7 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                         <FormItem>
                           <FormLabel>WhatsApp Number</FormLabel>
                           <FormControl>
-                            <PhoneInput placeholder="+1 234 567 890" {...field} />
+                            <PhoneInput placeholder="+1 234 567 890" international defaultCountry="IN" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
