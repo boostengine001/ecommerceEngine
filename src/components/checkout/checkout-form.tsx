@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
-import { CreditCard, Truck, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CreditCard, Truck, Loader2, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { createOrder, verifyPayment } from '@/lib/actions/order.actions';
 import { useToast } from '@/hooks/use-toast';
@@ -19,13 +19,16 @@ import type { ISettings } from '@/models/Setting';
 import { getSettings } from '@/lib/actions/setting.actions';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { isValidPhoneNumber } from 'react-phone-number-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { IAddress } from '@/models/User';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Label } from '../ui/label';
 
 declare global {
     interface Window {
         Razorpay: any;
     }
 }
-
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -42,25 +45,50 @@ interface CheckoutFormProps {
     couponCode?: string;
 }
 
-
 export default function CheckoutForm({ totalAmount, discount, couponCode }: CheckoutFormProps) {
   const router = useRouter();
   const { cartItems, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { 
-      name: user?.displayName || "", 
+      name: user?.firstName ? `${user.firstName} ${user.lastName}` : "", 
+      email: user?.email || "",
       address: "", 
       city: "", 
       zip: "",
-      email: user?.email || "",
-      phone: "",
+      phone: user?.phone || "",
     },
   });
+
+  useEffect(() => {
+    if (selectedAddressId !== 'new' && user?.addresses) {
+      const selectedAddr = user.addresses.find(a => a._id === selectedAddressId);
+      if (selectedAddr) {
+        form.reset({
+          name: selectedAddr.name,
+          address: selectedAddr.address,
+          city: selectedAddr.city,
+          zip: selectedAddr.zip,
+          phone: selectedAddr.phone,
+          email: user.email || '',
+        });
+      }
+    } else {
+       form.reset({
+          name: user?.firstName ? `${user.firstName} ${user.lastName}` : "", 
+          email: user?.email || "",
+          address: "", 
+          city: "", 
+          zip: "",
+          phone: user?.phone || "",
+       });
+    }
+  }, [selectedAddressId, user, form]);
   
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
@@ -77,7 +105,8 @@ export default function CheckoutForm({ totalAmount, discount, couponCode }: Chec
             totalAmount: totalAmount,
             originalAmount: totalPrice,
             discountAmount: discount,
-            couponCode: couponCode
+            couponCode: couponCode,
+            saveAddress: selectedAddressId === 'new',
         }
 
         const serverOrder = await createOrder(orderPayload);
@@ -153,38 +182,47 @@ export default function CheckoutForm({ totalAmount, discount, couponCode }: Chec
               <CardTitle className="flex items-center gap-2"><Truck/> Shipping Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-               <div className="grid grid-cols-2 gap-4">
-                 <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                 <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone</FormLabel>
-                      <FormControl>
-                        <PhoneInput international defaultCountry="IN" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-               </div>
-              <FormField control={form.control} name="address" render={({ field }) => (
-                <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="city" render={({ field }) => (
-                  <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="zip" render={({ field }) => (
-                  <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-              </div>
+                {user && user.addresses && user.addresses.length > 0 && (
+                    <RadioGroup value={selectedAddressId} onValueChange={setSelectedAddressId} className="space-y-2">
+                        {user.addresses.map(addr => (
+                            <Label key={addr._id} htmlFor={addr._id} className="flex items-start gap-4 rounded-md border p-4 cursor-pointer has-[:checked]:border-primary">
+                                <RadioGroupItem value={addr._id} id={addr._id} />
+                                <div>
+                                    <p className="font-semibold">{addr.name}</p>
+                                    <p className="text-sm text-muted-foreground">{addr.address}, {addr.city}, {addr.zip}</p>
+                                </div>
+                            </Label>
+                        ))}
+                         <Label htmlFor="new" className="flex items-center gap-4 rounded-md border p-4 cursor-pointer has-[:checked]:border-primary">
+                            <RadioGroupItem value="new" id="new" />
+                            <p className="font-semibold">Use a new address</p>
+                        </Label>
+                    </RadioGroup>
+                )}
+
+                <div className={selectedAddressId !== 'new' && user?.addresses && user.addresses.length > 0 ? 'hidden' : 'space-y-4'}>
+                    <FormField control={form.control} name="name" render={({ field }) => (
+                        <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} disabled={!!user} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name="phone" render={({ field }) => (
+                        <FormItem><FormLabel>Phone</FormLabel><FormControl><PhoneInput international defaultCountry="IN" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name="address" render={({ field }) => (
+                        <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="city" render={({ field }) => (
+                        <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="zip" render={({ field }) => (
+                        <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                    </div>
+                </div>
+
               <Button type="submit" className="w-full !mt-6" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 {loading ? "Processing..." : `Pay ${formatPrice(totalAmount)}`}
@@ -195,7 +233,6 @@ export default function CheckoutForm({ totalAmount, discount, couponCode }: Chec
     </Card>
   );
 }
-
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {

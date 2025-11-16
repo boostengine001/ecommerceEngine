@@ -3,11 +3,14 @@ import { SignupForm } from "@/components/auth/signup-form";
 import { getSettings } from "@/lib/actions/setting.actions";
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PhoneAuthForm } from "@/components/auth/phone-auth-form";
+
 
 export default async function SignupPage() {
   const settings = await getSettings();
   return (
-    <div className="mx-auto grid w-full max-w-[350px] gap-6">
+    <div className="mx-auto grid w-full max-w-[380px] gap-6">
        <div className="md:hidden absolute top-8 left-8">
           <Link
               href="/"
@@ -23,7 +26,19 @@ export default async function SignupPage() {
           Enter your details below to create your account
         </p>
       </div>
-      <SignupForm />
+      <Tabs defaultValue="email" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="email">Email</TabsTrigger>
+          <TabsTrigger value="phone">Phone</TabsTrigger>
+        </TabsList>
+        <TabsContent value="email">
+            <SignupForm />
+        </TabsContent>
+        <TabsContent value="phone">
+            <PhoneAuthForm />
+        </TabsContent>
+      </Tabs>
+
       <div className="mt-4 text-center text-sm">
         Already have an account?{" "}
         <Link href="/login" className="underline">

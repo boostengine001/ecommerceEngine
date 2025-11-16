@@ -35,23 +35,27 @@ interface CreateOrderPayload {
     originalAmount: number;
     discountAmount: number;
     couponCode?: string;
+    saveAddress?: boolean;
 }
 
 export async function createOrder(payload: CreateOrderPayload) {
     await dbConnect();
     let user = await getUserFromSession();
 
+    const { shippingAddress, saveAddress } = payload;
+    
     if (!user) {
       // Handle guest user
-      const { email, name } = payload.shippingAddress;
+      const { email, name, phone } = shippingAddress;
       const [firstName, ...lastNameParts] = name.split(' ');
       const lastName = lastNameParts.join(' ') || firstName;
       
-      let guestUser = await User.findOne({ email: email, isGuest: true });
+      let guestUser = await User.findOne({ $or: [{ email }, { phone }] });
 
       if (!guestUser) {
         guestUser = new User({
           email,
+          phone,
           firstName,
           lastName,
           isGuest: true,
@@ -59,6 +63,23 @@ export async function createOrder(payload: CreateOrderPayload) {
         await guestUser.save();
       }
       user = guestUser;
+    }
+
+    if (user && saveAddress) {
+        const dbUser = await User.findById(user._id);
+        if (dbUser) {
+            // Check if address already exists
+            const addressExists = dbUser.addresses.some(
+                (addr) =>
+                addr.address === shippingAddress.address &&
+                addr.zip === shippingAddress.zip
+            );
+            if (!addressExists) {
+                dbUser.addresses.push({ ...shippingAddress, isDefault: dbUser.addresses.length === 0 });
+                await dbUser.save();
+                revalidatePath('/profile');
+            }
+        }
     }
     
     // Create OrderItems first

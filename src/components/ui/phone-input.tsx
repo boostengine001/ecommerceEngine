@@ -10,7 +10,7 @@ import {
   parsePhoneNumber,
 } from 'libphonenumber-js';
 import PhoneInputWithCountry, {
-  CountrySelector,
+  CountrySelectorProps,
   Flag,
   isCountry,
   usePhoneInput,
@@ -153,7 +153,7 @@ const PhoneInputWithCountryForward = React.forwardRef<
       // to render the country selector.
       // We could also have used `React.cloneElement` to add the country selector.
       startAdornment={
-        <CountrySelector
+        <MemoisedCountrySelector
           countries={countries}
           selectedCountry={country}
           onSelect={(value) => {
@@ -176,17 +176,12 @@ const PhoneInputWithCountryForward = React.forwardRef<
 
 PhoneInputWithCountryForward.displayName = 'PhoneInputWithCountry';
 
-const CountrySelector = ({
+const CustomCountrySelector = ({
   selectedCountry,
   countries,
   value,
   onSelect,
-}: {
-  selectedCountry: Country | undefined;
-  countries: readonly Country[];
-  value?: string;
-  onSelect: (country: Country) => void;
-}) => {
+}: CountrySelectorProps) => {
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = (country: Country) => {
@@ -248,7 +243,7 @@ const CountrySelector = ({
   );
 };
 
-const MemoisedCountrySelector = React.memo(CountrySelector);
+const MemoisedCountrySelector = React.memo(CustomCountrySelector);
 MemoisedCountrySelector.displayName = 'MemoisedCountrySelector';
 
 export { PhoneInput };

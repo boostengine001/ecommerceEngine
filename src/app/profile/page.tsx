@@ -6,45 +6,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
-import { updateUserProfile } from '@/lib/actions/user.actions';
+import { updateUserProfile, deleteAddress, addAddress, updateAddress } from '@/lib/actions/user.actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import ImageDropzone from '@/components/admin/image-dropzone';
 import { Label } from '@/components/ui/label';
-
-const profileSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email(),
-});
-
-const passwordSchema = z.object({
-    currentPassword: z.string().min(6, 'Current password is required.'),
-    newPassword: z.string().min(6, 'New password must be at least 6 characters.'),
-    confirmPassword: z.string().min(6, 'Please confirm your new password.'),
-}).refine(data => data.newPassword === data.confirmPassword, {
-    message: "New passwords don't match",
-    path: ['confirmPassword'],
-});
-
+import { Address, PlusCircle, Home, Trash2, Edit } from 'lucide-react';
+import { AddressForm, addressSchema } from '@/components/profile/address-form';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import type { IAddress } from '@/models/User';
 
 function ProfileForm({ user }: { user: ClientUser }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const form = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      email: user.email || '',
-    },
-  });
   
   const handleProfileSubmit = async (data: any) => {
     setLoading(true);
@@ -86,7 +66,11 @@ function ProfileForm({ user }: { user: ClientUser }) {
             </div>
             <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type='email' value={user.email} readOnly disabled />
+                <Input type='email' value={user.email || 'No email set'} readOnly disabled />
+            </div>
+            <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input type='tel' value={user.phone || 'No phone set'} readOnly disabled />
             </div>
           <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
         </CardContent>
@@ -94,6 +78,15 @@ function ProfileForm({ user }: { user: ClientUser }) {
     </Card>
   );
 }
+
+const passwordSchema = z.object({
+    currentPassword: z.string().min(6, 'Current password is required.'),
+    newPassword: z.string().min(6, 'New password must be at least 6 characters.'),
+    confirmPassword: z.string().min(6, 'Please confirm your new password.'),
+}).refine(data => data.newPassword === data.confirmPassword, {
+    message: "New passwords don't match",
+    path: ['confirmPassword'],
+});
 
 function PasswordForm({ userId }: { userId: string }) {
     const { toast } = useToast();
@@ -160,6 +153,92 @@ function PasswordForm({ userId }: { userId: string }) {
     );
 }
 
+function AddressManagement({ user }: { user: ClientUser }) {
+    const { toast } = useToast();
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingAddress, setEditingAddress] = useState<IAddress | null>(null);
+
+    const handleAddressAction = async (values: z.infer<typeof addressSchema>) => {
+        try {
+            if (editingAddress) {
+                await updateAddress(editingAddress._id, values);
+                toast({ title: "Address Updated" });
+            } else {
+                await addAddress(values);
+                toast({ title: "Address Added" });
+            }
+            setDialogOpen(false);
+            setEditingAddress(null);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to save address." });
+        }
+    };
+
+    const handleDelete = async (addressId: string) => {
+        try {
+            await deleteAddress(addressId);
+            toast({ title: "Address Removed" });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to remove address." });
+        }
+    };
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Address Book</CardTitle>
+                    <CardDescription>Manage your saved shipping addresses.</CardDescription>
+                </div>
+                <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingAddress(null); }}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add New</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingAddress ? 'Edit Address' : 'Add New Address'}</DialogTitle>
+                        </DialogHeader>
+                        <AddressForm 
+                            onSubmit={handleAddressAction}
+                            initialData={editingAddress || undefined}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </CardHeader>
+            <CardContent>
+                {user.addresses && user.addresses.length > 0 ? (
+                    <div className="space-y-4">
+                        {user.addresses.map(address => (
+                            <div key={address._id} className="border p-4 rounded-md flex items-start justify-between">
+                                <div>
+                                    <p className="font-semibold">{address.name} {address.isDefault && <span className="text-xs text-primary font-medium">(Default)</span>}</p>
+                                    <p className="text-muted-foreground">{address.address}, {address.city}, {address.zip}</p>
+                                    <p className="text-muted-foreground">{address.phone}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                     <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => setEditingAddress(address)}><Edit className="h-4 w-4" /></Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Address</DialogTitle>
+                                            </DialogHeader>
+                                            <AddressForm onSubmit={handleAddressAction} initialData={address} />
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(address._id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-muted-foreground text-center">No saved addresses.</p>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useAuth();
@@ -203,9 +282,10 @@ export default function ProfilePage() {
       <div className="mb-8 border-b pb-4">
         <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 gap-8">
         <ProfileForm user={user} />
-        <PasswordForm userId={user.id} />
+        <AddressManagement user={user} />
+        {user.password && <PasswordForm userId={user.id} />}
       </div>
     </div>
   );
