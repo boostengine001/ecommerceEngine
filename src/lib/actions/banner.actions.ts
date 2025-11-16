@@ -50,15 +50,16 @@ export async function addBanner(formData: FormData) {
   revalidatePath('/');
 }
 
-export async function getAllBanners(): Promise<IBanner[]> {
+export async function getAllBanners(includeDeleted = false): Promise<IBanner[]> {
   await dbConnect();
-  const banners = await Banner.find({}).sort({ createdAt: -1 }).lean();
+  const query = includeDeleted ? {} : { isDeleted: { $ne: true } };
+  const banners = await Banner.find(query).sort({ createdAt: -1 }).lean();
   return JSON.parse(JSON.stringify(banners));
 }
 
 export async function getActiveBanners(): Promise<IBanner[]> {
   await dbConnect();
-  const banners = await Banner.find({ isActive: true }).lean();
+  const banners = await Banner.find({ isActive: true, isDeleted: { $ne: true } }).lean();
   return JSON.parse(JSON.stringify(banners));
 }
 
@@ -107,6 +108,20 @@ export async function updateBanner(id: string, formData: FormData) {
 }
 
 export async function deleteBanner(id: string) {
+  await dbConnect();
+  await Banner.findByIdAndUpdate(id, { isDeleted: true });
+  revalidatePath('/admin/marketing');
+  revalidatePath('/');
+}
+
+export async function recoverBanner(id: string) {
+  await dbConnect();
+  await Banner.findByIdAndUpdate(id, { isDeleted: false });
+  revalidatePath('/admin/marketing');
+  revalidatePath('/');
+}
+
+export async function deleteBannerPermanently(id: string) {
   await dbConnect();
   await Banner.findByIdAndDelete(id);
   revalidatePath('/admin/marketing');

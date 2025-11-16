@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { IProduct } from '@/models/Product';
@@ -17,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import DeleteProductButton from './delete-product-button';
+import ProductActionButtons from './delete-product-button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -59,8 +60,8 @@ export function ProductCard({ product }: { product: IProduct }) {
                     <Link href={`/products/${product.slug}`} target="_blank">View</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteProductButton id={product._id} />
+                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <ProductActionButtons product={product} />
                 </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>
@@ -76,7 +77,7 @@ export function ProductCard({ product }: { product: IProduct }) {
                   <span className="font-bold text-lg">{formatPrice(product.price)}</span>
               )}
           </div>
-          <Badge variant={product.isActive ? 'default' : 'destructive'}>{product.isActive ? 'Active' : 'Archived'}</Badge>
+          <Badge variant={product.isActive ? 'default' : 'secondary'}>{product.isActive ? 'Active' : 'Archived'}</Badge>
       </CardContent>
     </Card>
   )

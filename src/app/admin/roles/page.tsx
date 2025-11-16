@@ -11,11 +11,14 @@ import {
   Card,
 } from '@/components/ui/card';
 import { RoleCard } from './role-card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type RoleWithUserCount = IRole & { userCount: number };
 
 export default async function AdminRolesPage() {
-  const roles: RoleWithUserCount[] = await getRoles();
+  const allRoles: RoleWithUserCount[] = await getRoles(true);
+  const activeRoles = allRoles.filter(r => !r.isDeleted);
+  const deletedRoles = allRoles.filter(r => r.isDeleted);
 
   return (
     <div className="space-y-6">
@@ -34,23 +37,26 @@ export default async function AdminRolesPage() {
         </div>
       </div>
 
-       {/* Mobile View */}
-      <div className="grid gap-4 md:hidden">
-        {roles.map((role) => (
-          <RoleCard key={role._id} role={role} />
-        ))}
-         {roles.length === 0 && (
-            <Card className="flex items-center justify-center p-10">
-                <p className="text-muted-foreground">No roles found.</p>
-            </Card>
-        )}
-      </div>
-
-      {/* Desktop View */}
-      <div className="hidden md:block">
-        <DataTable columns={columns} data={roles} />
-      </div>
-
+      <Tabs defaultValue="active">
+        <TabsList>
+          <TabsTrigger value="active">Active ({activeRoles.length})</TabsTrigger>
+          <TabsTrigger value="deleted">Deleted ({deletedRoles.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active" className="mt-4">
+          <div className="grid gap-4 md:hidden">
+            {activeRoles.map((role) => ( <RoleCard key={role._id} role={role} /> ))}
+            {activeRoles.length === 0 && (<Card className="flex items-center justify-center p-10"><p className="text-muted-foreground">No active roles found.</p></Card>)}
+          </div>
+          <div className="hidden md:block"><DataTable columns={columns} data={activeRoles} /></div>
+        </TabsContent>
+        <TabsContent value="deleted" className="mt-4">
+          <div className="grid gap-4 md:hidden">
+            {deletedRoles.map((role) => ( <RoleCard key={role._id} role={role} /> ))}
+            {deletedRoles.length === 0 && (<Card className="flex items-center justify-center p-10"><p className="text-muted-foreground">No deleted roles found.</p></Card>)}
+          </div>
+          <div className="hidden md:block"><DataTable columns={columns} data={deletedRoles} /></div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 
 import type { IBanner } from "@/models/Banner";
 import type { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal, Archive, ArchiveRestore, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
-import { deleteBanner } from "@/lib/actions/banner.actions";
+import { deleteBanner, recoverBanner, deleteBannerPermanently } from "@/lib/actions/banner.actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,29 +30,70 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useToast } from "@/hooks/use-toast";
 
-function DeleteBannerButton({ id }: { id: string }) {
+
+function BannerActions({ banner }: { banner: IBanner }) {
+  const { toast } = useToast();
+
+  const handleAction = async (action: () => Promise<void>, successMessage: string) => {
+    try {
+      await action();
+      toast({ title: successMessage });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'An error occurred.' });
+    }
+  };
+
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive">Delete</Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete the banner.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => deleteBanner(id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem asChild>
+          <Link href={`/admin/marketing/${banner._id}/edit`}>Edit</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {banner.isDeleted ? (
+          <DropdownMenuItem onClick={() => handleAction(() => recoverBanner(banner._id), 'Banner recovered')}>
+            <ArchiveRestore className="mr-2 h-4 w-4" />
+            Recover
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => handleAction(() => deleteBanner(banner._id), 'Banner deleted')}>
+            <Archive className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        )}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive hover:text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Permanently
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the banner.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => handleAction(() => deleteBannerPermanently(banner._id), 'Banner deleted permanently')} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
-
 
 export const columns: ColumnDef<IBanner>[] = [
     {
@@ -108,37 +149,13 @@ export const columns: ColumnDef<IBanner>[] = [
     accessorKey: "isActive",
     header: "Status",
     cell: ({ row }) => {
-        const isActive = row.original.isActive;
-        return <Badge variant={isActive ? 'default' : 'secondary'}>{isActive ? 'Active' : 'Inactive'}</Badge>
+        const banner = row.original;
+        if(banner.isDeleted) return <Badge variant="destructive">Deleted</Badge>
+        return <Badge variant={banner.isActive ? 'default' : 'secondary'}>{banner.isActive ? 'Active' : 'Inactive'}</Badge>
     }
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const banner = row.original
- 
-      return (
-        <div className="flex items-center justify-end gap-2">
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                    <Link href={`/admin/marketing/${banner._id}/edit`}>Edit</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <DeleteBannerButton id={banner._id} />
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-      )
-    },
+    cell: ({ row }) => <BannerActions banner={row.original} />,
   },
 ]

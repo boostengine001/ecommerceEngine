@@ -93,6 +93,7 @@ export async function addProduct(formData: FormData) {
     media: imageUrls.map(url => ({ type: 'image', url })),
     variants,
     weight,
+    isActive: true,
   };
 
   if(length && width && height) {
@@ -108,11 +109,14 @@ export async function addProduct(formData: FormData) {
   revalidatePath('/shop');
 }
 
-export async function getProducts(): Promise<IProduct[]> {
+export async function getProducts(includeArchived = false): Promise<IProduct[]> {
     await dbConnect();
     // Eagerly import Category model to prevent MissingSchemaError
     await Category.find({});
-    const products = await Product.find({}).populate('category').sort({ createdAt: -1 }).lean();
+    
+    const query = includeArchived ? {} : { isActive: true };
+    
+    const products = await Product.find(query).populate('category').sort({ createdAt: -1 }).lean();
     return JSON.parse(JSON.stringify(products));
 }
 
@@ -127,7 +131,7 @@ export async function getProduct(id: string): Promise<IProduct | null> {
 export async function getProductBySlug(slug: string): Promise<IProduct | null> {
   await dbConnect();
   await Category.find({}); // Ensure category schema is registered
-  const product = await Product.findOne({ slug }).populate('category').lean();
+  const product = await Product.findOne({ slug, isActive: true }).populate('category').lean();
   if (!product) return null;
   return JSON.parse(JSON.stringify(product));
 }
@@ -194,11 +198,23 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 
-export async function deleteProduct(id: string) {
+export async function deleteProductPermanently(id: string) {
   await dbConnect();
-  
   await Product.findByIdAndDelete(id);
+  revalidatePath('/admin/products');
+  revalidatePath('/shop');
+}
 
+export async function archiveProduct(id: string) {
+  await dbConnect();
+  await Product.findByIdAndUpdate(id, { isActive: false });
+  revalidatePath('/admin/products');
+  revalidatePath('/shop');
+}
+
+export async function recoverProduct(id: string) {
+  await dbConnect();
+  await Product.findByIdAndUpdate(id, { isActive: true });
   revalidatePath('/admin/products');
   revalidatePath('/shop');
 }

@@ -46,14 +46,17 @@ export function RoleCard({ role }: { role: RoleWithUserCount }) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteRoleButton id={role._id} />
+                    <DeleteRoleButton role={role} />
                 </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>
       </CardHeader>
-      <CardContent className="flex items-center gap-4">
-        <Badge variant="secondary">{role.permissions.length} Permissions</Badge>
-        <span className="text-sm text-muted-foreground">{role.userCount} User(s)</span>
+      <CardContent className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+            <Badge variant="secondary">{role.permissions.length} Permissions</Badge>
+            <span className="text-sm text-muted-foreground">{role.userCount} User(s)</span>
+        </div>
+        <Badge variant={role.isDeleted ? 'secondary' : 'default'}>{role.isDeleted ? 'Deleted' : 'Active'}</Badge>
       </CardContent>
     </Card>
   )

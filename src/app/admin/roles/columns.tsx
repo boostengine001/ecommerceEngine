@@ -82,6 +82,14 @@ export const columns: ColumnDef<IRole & { userCount: number }>[] = [
         return <Badge variant="secondary">{permissions.length} Permissions</Badge>
     }
   },
+    {
+    accessorKey: "isDeleted",
+    header: "Status",
+    cell: ({ row }) => {
+        const isDeleted = row.original.isDeleted;
+        return <Badge variant={isDeleted ? 'secondary' : 'default'}>{isDeleted ? 'Deleted' : 'Active'}</Badge>
+    }
+  },
   {
     id: "actions",
     cell: ({ row }) => {
@@ -103,7 +111,7 @@ export const columns: ColumnDef<IRole & { userCount: number }>[] = [
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteRoleButton id={role._id} />
+                    <DeleteRoleButton role={role} />
                 </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>

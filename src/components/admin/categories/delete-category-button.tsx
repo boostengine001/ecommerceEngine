@@ -12,71 +12,69 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { deleteCategory } from '@/lib/actions/category.actions';
+import { Button } from '@/components/ui/button';
+import { deleteCategory, recoverCategory, deleteCategoryPermanently } from '@/lib/actions/category.actions';
 import { cn } from '@/lib/utils';
-import type { VariantProps } from 'class-variance-authority';
-import { Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import React from 'react';
+import { useToast } from '@/hooks/use-toast';
+import type { ICategory } from '@/models/Category';
 
-interface DeleteCategoryButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  id: string;
-  children?: React.ReactNode;
+interface DeleteCategoryButtonProps {
+  category: ICategory;
 }
 
-export default function DeleteCategoryButton({
-  id,
-  variant,
-  className,
-  children,
-  ...props
-}: DeleteCategoryButtonProps) {
-  const [isClient, setIsClient] = React.useState(false);
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
+export default function DeleteCategoryButton({ category }: DeleteCategoryButtonProps) {
+  const { toast } = useToast();
 
-  if (!isClient) {
-    return null;
-  }
-  
-  const handleDelete = async () => {
+  const handleAction = async (action: () => Promise<void>, successMessage: string) => {
     try {
-      await deleteCategory(id);
+      await action();
+      toast({ title: successMessage });
     } catch (error) {
-      console.error("Failed to delete category:", error);
-      // Optionally, show a toast notification on error
+      toast({ variant: 'destructive', title: 'Error', description: 'An error occurred.' });
     }
   };
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <button className={cn(buttonVariants({ variant, className }))} {...props}>
-          {children || (
-            <>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </>
-          )}
-        </button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the category and all of its subcategories.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} className={buttonVariants({ variant: 'destructive' })}>
-            Continue
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      {category.isDeleted ? (
+        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => recoverCategory(category._id), 'Category recovered')}>
+          <ArchiveRestore className="mr-2 h-4 w-4" />
+          Recover
+        </Button>
+      ) : (
+        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => deleteCategory(category._id), 'Category deleted')}>
+          <Archive className="mr-2 h-4 w-4" />
+          Delete
+        </Button>
+      )}
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button className={cn(
+            'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+            'w-full justify-start font-normal text-destructive hover:text-destructive'
+          )}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Permanently
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the category and all its subcategories.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleAction(() => deleteCategoryPermanently(category._id), 'Category deleted permanently')} className="bg-destructive hover:bg-destructive/90">
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

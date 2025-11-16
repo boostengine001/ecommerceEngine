@@ -7,6 +7,7 @@ export interface IBanner extends Document {
   image: string;
   link: string;
   isActive: boolean;
+  isDeleted: boolean;
 }
 
 const BannerSchema: Schema = new Schema({
@@ -14,6 +15,7 @@ const BannerSchema: Schema = new Schema({
   image: { type: String, required: true },
   link: { type: String, trim: true },
   isActive: { type: Boolean, default: true, index: true },
+  isDeleted: { type: Boolean, default: false, index: true },
 }, { timestamps: true });
 
 export default models.Banner || model<IBanner>('Banner', BannerSchema);

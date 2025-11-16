@@ -8,9 +8,6 @@ import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import Image from 'next/image';
 import { MoreHorizontal } from 'lucide-react';
@@ -24,6 +21,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import DeleteCategoryButton from '@/components/admin/categories/delete-category-button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +51,7 @@ function CategoryCard({ category }: { category: ICategory }) {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                        <DeleteCategoryButton id={category._id} variant="ghost" className="w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive" />
+                        <DeleteCategoryButton category={category} />
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -73,7 +72,9 @@ function CategoryCard({ category }: { category: ICategory }) {
 
 
 export default async function AdminCategoriesPage() {
-  const categories: ICategory[] = await getAllCategories();
+  const allCategories: ICategory[] = await getAllCategories(true);
+  const activeCategories = allCategories.filter(c => !c.isDeleted);
+  const deletedCategories = allCategories.filter(c => c.isDeleted);
 
   return (
     <div className="space-y-6">
@@ -89,22 +90,26 @@ export default async function AdminCategoriesPage() {
         </Button>
       </div>
 
-       {/* Mobile View */}
-      <div className="grid gap-4 md:hidden">
-        {categories.map((category) => (
-          <CategoryCard key={category._id} category={category} />
-        ))}
-         {categories.length === 0 && (
-            <Card className="flex items-center justify-center p-10">
-                <p className="text-muted-foreground">No categories found.</p>
-            </Card>
-        )}
-      </div>
-
-      {/* Desktop View */}
-      <div className="hidden md:block">
-        <DataTable columns={columns} data={categories} />
-      </div>
+      <Tabs defaultValue="active">
+        <TabsList>
+          <TabsTrigger value="active">Active ({activeCategories.length})</TabsTrigger>
+          <TabsTrigger value="deleted">Deleted ({deletedCategories.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active" className="mt-4">
+          <div className="grid gap-4 md:hidden">
+            {activeCategories.map((category) => ( <CategoryCard key={category._id} category={category} /> ))}
+            {activeCategories.length === 0 && (<Card className="flex items-center justify-center p-10"><p className="text-muted-foreground">No active categories found.</p></Card>)}
+          </div>
+          <div className="hidden md:block"> <DataTable columns={columns} data={activeCategories} /> </div>
+        </TabsContent>
+        <TabsContent value="deleted" className="mt-4">
+          <div className="grid gap-4 md:hidden">
+            {deletedCategories.map((category) => ( <CategoryCard key={category._id} category={category} /> ))}
+            {deletedCategories.length === 0 && (<Card className="flex items-center justify-center p-10"><p className="text-muted-foreground">No deleted categories found.</p></Card>)}
+          </div>
+          <div className="hidden md:block"> <DataTable columns={columns} data={deletedCategories} /> </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

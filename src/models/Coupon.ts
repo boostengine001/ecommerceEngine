@@ -11,6 +11,7 @@ export interface ICoupon extends Document {
   isActive: boolean;
   usageLimit?: number;
   usageCount: number;
+  isDeleted: boolean;
 }
 
 const CouponSchema: Schema = new Schema({
@@ -22,6 +23,7 @@ const CouponSchema: Schema = new Schema({
   isActive: { type: Boolean, default: true, index: true },
   usageLimit: { type: Number, min: 1 },
   usageCount: { type: Number, default: 0 },
+  isDeleted: { type: Boolean, default: false, index: true },
 }, { timestamps: true });
 
 export default models.Coupon || model<ICoupon>('Coupon', CouponSchema);

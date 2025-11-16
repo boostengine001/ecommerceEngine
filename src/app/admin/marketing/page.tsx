@@ -6,11 +6,16 @@ import { getAllBanners } from '@/lib/actions/banner.actions';
 import type { IBanner } from '@/models/Banner';
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminMarketingPage() {
-  const banners: IBanner[] = await getAllBanners();
+  const allBanners: IBanner[] = await getAllBanners(true);
+  const activeBanners = allBanners.filter(b => !b.isDeleted);
+  const deletedBanners = allBanners.filter(b => b.isDeleted);
+
 
   return (
     <div className="space-y-6">
@@ -26,7 +31,18 @@ export default async function AdminMarketingPage() {
         </Button>
       </div>
 
-      <DataTable columns={columns} data={banners} />
+       <Tabs defaultValue="active">
+        <TabsList>
+          <TabsTrigger value="active">Active ({activeBanners.length})</TabsTrigger>
+          <TabsTrigger value="deleted">Deleted ({deletedBanners.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active" className="mt-4">
+          <DataTable columns={columns} data={activeBanners} />
+        </TabsContent>
+        <TabsContent value="deleted" className="mt-4">
+           <DataTable columns={columns} data={deletedBanners} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

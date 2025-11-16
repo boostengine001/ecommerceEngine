@@ -86,6 +86,14 @@ export const columns: ColumnDef<ICategory>[] = [
         )
     }
   },
+    {
+    accessorKey: "isDeleted",
+    header: "Status",
+    cell: ({ row }) => {
+        const isDeleted = row.original.isDeleted;
+        return <Badge variant={isDeleted ? 'secondary' : 'default'}>{isDeleted ? 'Deleted' : 'Active'}</Badge>
+    }
+  },
   {
     id: "actions",
     cell: ({ row }) => {
@@ -107,7 +115,7 @@ export const columns: ColumnDef<ICategory>[] = [
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteCategoryButton id={category._id} variant="ghost" className="w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive" />
+                    <DeleteCategoryButton category={category} />
                 </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>

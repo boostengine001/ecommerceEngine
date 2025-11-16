@@ -6,11 +6,14 @@ import { getAllCoupons } from '@/lib/actions/coupon.actions';
 import type { ICoupon } from '@/models/Coupon';
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDiscountsPage() {
-  const coupons: ICoupon[] = await getAllCoupons();
+  const allCoupons: ICoupon[] = await getAllCoupons(true);
+  const activeCoupons = allCoupons.filter(c => !c.isDeleted);
+  const deletedCoupons = allCoupons.filter(c => c.isDeleted);
 
   return (
     <div className="space-y-6">
@@ -26,7 +29,18 @@ export default async function AdminDiscountsPage() {
         </Button>
       </div>
 
-      <DataTable columns={columns} data={coupons} />
+      <Tabs defaultValue="active">
+        <TabsList>
+          <TabsTrigger value="active">Active ({activeCoupons.length})</TabsTrigger>
+          <TabsTrigger value="deleted">Deleted ({deletedCoupons.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active" className="mt-4">
+          <DataTable columns={columns} data={activeCoupons} />
+        </TabsContent>
+        <TabsContent value="deleted" className="mt-4">
+          <DataTable columns={columns} data={deletedCoupons} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

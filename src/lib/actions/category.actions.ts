@@ -71,9 +71,10 @@ export async function addCategory(formData: FormData) {
   revalidatePath('/admin/categories');
 }
 
-export async function getAllCategories(): Promise<ICategory[]> {
+export async function getAllCategories(includeDeleted = false): Promise<ICategory[]> {
   await dbConnect();
-  const categories = await Category.find({}).sort({ name: 1 }).populate('parent').lean();
+  const query = includeDeleted ? {} : { isDeleted: { $ne: true } };
+  const categories = await Category.find(query).sort({ name: 1 }).populate('parent').lean();
   return JSON.parse(JSON.stringify(categories));
 }
 
@@ -88,12 +89,12 @@ export async function getCategory(id: string): Promise<ICategory | null> {
 
 export async function getCategoryWithDescendants(slug: string): Promise<{ category: ICategory; descendantIds: string[] } | null> {
     await dbConnect();
-    const category = await Category.findOne({ slug }).lean();
+    const category = await Category.findOne({ slug, isDeleted: { $ne: true } }).lean();
     if (!category) {
         return null;
     }
 
-    const descendants = await Category.find({ 'ancestors._id': category._id }).lean();
+    const descendants = await Category.find({ 'ancestors._id': category._id, isDeleted: { $ne: true } }).lean();
     const descendantIds = descendants.map(d => d._id.toString());
     
     return {
@@ -147,6 +148,18 @@ export async function updateCategory(id: string, formData: FormData) {
 }
 
 export async function deleteCategory(id: string) {
+  await dbConnect();
+  await Category.findByIdAndUpdate(id, { isDeleted: true });
+  revalidatePath('/admin/categories');
+}
+
+export async function recoverCategory(id: string) {
+  await dbConnect();
+  await Category.findByIdAndUpdate(id, { isDeleted: false });
+  revalidatePath('/admin/categories');
+}
+
+export async function deleteCategoryPermanently(id: string) {
   await dbConnect();
   
   const descendants = await Category.find({ 'ancestors._id': id });

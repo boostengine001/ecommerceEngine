@@ -25,9 +25,10 @@ export async function createRole(formData: FormData) {
   revalidatePath('/admin/roles');
 }
 
-export async function getRoles(): Promise<IRole[]> {
+export async function getRoles(includeDeleted = false): Promise<IRole[]> {
   await dbConnect();
-  const roles = await Role.find({}).sort({ name: 1 }).lean();
+  const query = includeDeleted ? {} : { isDeleted: { $ne: true } };
+  const roles = await Role.find(query).sort({ name: 1 }).lean();
   
   const rolesWithUserCount = await Promise.all(
     roles.map(async (role) => {
@@ -67,12 +68,21 @@ export async function updateRole(formData: FormData) {
 
 export async function deleteRole(id: string) {
   await dbConnect();
+  await Role.findByIdAndUpdate(id, { isDeleted: true });
+  revalidatePath('/admin/roles');
+}
 
-  // Optionally, unassign this role from all users
+export async function recoverRole(id: string) {
+  await dbConnect();
+  await Role.findByIdAndUpdate(id, { isDeleted: false });
+  revalidatePath('/admin/roles');
+}
+
+export async function deleteRolePermanently(id: string) {
+  await dbConnect();
+  // Unassign this role from all users before deleting
   await User.updateMany({ role: id }, { $unset: { role: 1 } });
-  
   await Role.findByIdAndDelete(id);
-
   revalidatePath('/admin/roles');
 }
 

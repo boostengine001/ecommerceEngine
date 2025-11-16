@@ -4,7 +4,7 @@
 import type { IProduct } from "@/models/Product";
 import type { ICategory } from "@/models/Category";
 import type { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal, Archive, ArchiveRestore, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -19,7 +19,89 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
-import DeleteProductButton from "./delete-product-button";
+import { archiveProduct, recoverProduct, deleteProductPermanently } from "@/lib/actions/product.actions";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+
+function ProductActions({ product }: { product: IProduct }) {
+  const { toast } = useToast();
+
+  const handleAction = async (action: () => Promise<void>, successMessage: string) => {
+    try {
+      await action();
+      toast({ title: successMessage });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'An error occurred.' });
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-end gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link href={`/admin/products/${product._id}/edit`}>Edit</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/products/${product.slug}`} target="_blank">View</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {product.isActive ? (
+            <DropdownMenuItem onClick={() => handleAction(() => archiveProduct(product._id), 'Product archived')}>
+              <Archive className="mr-2 h-4 w-4" />
+              Archive
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={() => handleAction(() => recoverProduct(product._id), 'Product recovered')}>
+              <ArchiveRestore className="mr-2 h-4 w-4" />
+              Recover
+            </DropdownMenuItem>
+          )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive hover:text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the product from the database.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleAction(() => deleteProductPermanently(product._id), 'Product deleted permanently')} className="bg-destructive hover:bg-destructive/90">
+                  Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -116,39 +198,11 @@ export const columns: ColumnDef<IProduct>[] = [
     header: "Status",
     cell: ({ row }) => {
         const isActive = row.original.isActive;
-        return <Badge variant={isActive ? 'default' : 'destructive'}>{isActive ? 'Active' : 'Archived'}</Badge>
+        return <Badge variant={isActive ? 'default' : 'secondary'}>{isActive ? 'Active' : 'Archived'}</Badge>
     }
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const product = row.original
- 
-      return (
-        <div className="flex items-center justify-end gap-2">
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                    <Link href={`/admin/products/${product._id}/edit`}>Edit</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href={`/products/${product.slug}`} target="_blank">View</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteProductButton id={product._id} />
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-      )
-    },
+    cell: ({ row }) => <ProductActions product={row.original} />,
   },
 ]

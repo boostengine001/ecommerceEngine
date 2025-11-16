@@ -1,3 +1,4 @@
+
 import mongoose, { Schema, Document, models, model } from 'mongoose';
 
 
@@ -9,6 +10,7 @@ export interface ICategory extends Document {
   description: string;
   parent: mongoose.Types.ObjectId | ICategory | null;
   ancestors: { _id: mongoose.Types.ObjectId; name: string; slug: string }[];
+  isDeleted: boolean;
 }
 
 const CategorySchema: Schema = new Schema({
@@ -22,6 +24,7 @@ const CategorySchema: Schema = new Schema({
     name: { type: String, required: true },
     slug: { type: String, required: true },
   }],
+  isDeleted: { type: Boolean, default: false, index: true },
 }, { timestamps: true });
 
 

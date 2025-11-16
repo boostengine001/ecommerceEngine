@@ -97,9 +97,10 @@ export async function updateCoupon(formData: FormData) {
 }
 
 
-export async function getAllCoupons(): Promise<ICoupon[]> {
+export async function getAllCoupons(includeDeleted = false): Promise<ICoupon[]> {
   await dbConnect();
-  const coupons = await Coupon.find({}).sort({ createdAt: -1 }).lean();
+  const query = includeDeleted ? {} : { isDeleted: { $ne: true } };
+  const coupons = await Coupon.find(query).sort({ createdAt: -1 }).lean();
   return JSON.parse(JSON.stringify(coupons));
 }
 
@@ -112,13 +113,26 @@ export async function getCoupon(id: string): Promise<ICoupon | null> {
 
 export async function deleteCoupon(id: string) {
   await dbConnect();
+  await Coupon.findByIdAndUpdate(id, { isDeleted: true });
+  revalidatePath('/admin/discounts');
+}
+
+export async function recoverCoupon(id: string) {
+  await dbConnect();
+  await Coupon.findByIdAndUpdate(id, { isDeleted: false });
+  revalidatePath('/admin/discounts');
+}
+
+export async function deleteCouponPermanently(id: string) {
+  await dbConnect();
   await Coupon.findByIdAndDelete(id);
   revalidatePath('/admin/discounts');
 }
 
+
 export async function applyCoupon(code: string, total: number): Promise<{ success: boolean; coupon?: ICoupon; discount?: number; error?: string; }> {
     await dbConnect();
-    const coupon = await Coupon.findOne({ code, isActive: true }).lean();
+    const coupon = await Coupon.findOne({ code, isActive: true, isDeleted: { $ne: true } }).lean();
 
     if (!coupon) {
         return { success: false, error: 'Coupon not found or is inactive.' };

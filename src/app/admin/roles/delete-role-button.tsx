@@ -12,48 +12,68 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { deleteRole } from '@/lib/actions/role.actions';
+import { Button } from '@/components/ui/button';
+import { deleteRole, recoverRole, deleteRolePermanently } from '@/lib/actions/role.actions';
 import { cn } from '@/lib/utils';
-import { Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, Trash2 } from 'lucide-react';
+import type { IRole } from '@/models/Role';
+import { useToast } from '@/hooks/use-toast';
 
 interface DeleteRoleButtonProps {
-  id: string;
+  role: IRole;
 }
 
-export default function DeleteRoleButton({ id }: DeleteRoleButtonProps) {
-  
-  const handleDelete = async () => {
+export default function DeleteRoleButton({ role }: DeleteRoleButtonProps) {
+  const { toast } = useToast();
+
+  const handleAction = async (action: () => Promise<void>, successMessage: string) => {
     try {
-      await deleteRole(id);
+      await action();
+      toast({ title: successMessage });
     } catch (error) {
-      console.error("Failed to delete role:", error);
-      alert("Failed to delete role. See console for details.");
+      toast({ variant: 'destructive', title: 'Error', description: 'An error occurred.' });
     }
   };
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <button className={cn(buttonVariants({ variant: "ghost" }), "w-full justify-start p-2 h-auto font-normal text-destructive hover:text-destructive")}>
+    <>
+      {role.isDeleted ? (
+        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => recoverRole(role._id), 'Role recovered')}>
+          <ArchiveRestore className="mr-2 h-4 w-4" />
+          Recover
+        </Button>
+      ) : (
+        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => deleteRole(role._id), 'Role deleted')}>
+          <Archive className="mr-2 h-4 w-4" />
+          Delete
+        </Button>
+      )}
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button className={cn(
+            'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+            'w-full justify-start font-normal text-destructive hover:text-destructive'
+          )}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-        </button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the role. Users assigned to this role will lose their admin permissions.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} className={buttonVariants({ variant: 'destructive' })}>
-            Continue
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            Delete Permanently
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the role. Users assigned to this role will lose their admin permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleAction(() => deleteRolePermanently(role._id), 'Role deleted permanently')} className="bg-destructive hover:bg-destructive/90">
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
