@@ -28,11 +28,6 @@ export default async function RootLayout({
   const settings = await getSettings();
   const categories = await getAllCategories();
 
-  // Create a dynamic font string based on settings
-  const fontClass = settings.font === 'poppins' 
-      ? 'font-poppins' 
-      : 'font-inter';
-
   return (
     <html lang="en" className={cn("h-full")} suppressHydrationWarning>
       <head>

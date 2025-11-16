@@ -29,12 +29,12 @@ import { Textarea } from '@/components/ui/textarea';
 import type { ISettings } from '@/models/Setting';
 import { updateSettings as updateSettingsAction } from '@/lib/actions/setting.actions';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ImageDropzone from '../image-dropzone';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { cn } from '@/lib/utils';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -46,7 +46,8 @@ const phoneSchema = z.string().refine((value) => {
     return isValidPhoneNumber(value);
 }, {
     message: 'Invalid phone number'
-}).optional();
+}).optional().or(z.literal(''));
+
 
 const formSchema = z.object({
   storeName: z.string().min(1, 'Store name is required'),
@@ -60,15 +61,14 @@ const formSchema = z.object({
   'socials.youtube': z.string().url().or(z.literal('')).optional(),
   theme: z.enum(['light', 'dark', 'system']),
   font: z.string(),
+  primaryColor: z.string(),
+  primaryColorDark: z.string(),
 });
 
 export default function SettingsForm({ settings }: { settings: ISettings }) {
   const { toast } = useToast();
   const { updateSettings } = useSettings();
   const [loading, setLoading] = useState(false);
-  
-  const [primaryColor, setPrimaryColor] = useState(settings.primaryColor || '#2563eb');
-  const [primaryColorDark, setPrimaryColorDark] = useState(settings.primaryColorDark || '#60a5fa');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -84,31 +84,49 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
         'socials.youtube': settings.socials?.youtube || '',
         theme: settings.theme || 'light',
         font: settings.font || 'inter',
+        primaryColor: settings.primaryColor || '#2563eb',
+        primaryColorDark: settings.primaryColorDark || '#60a5fa',
     }
   });
+
+  useEffect(() => {
+    form.reset({
+      ...settings,
+      primaryColor: settings.primaryColor || '#2563eb',
+      primaryColorDark: settings.primaryColorDark || '#60a5fa',
+      'socials.facebook': settings.socials?.facebook || '',
+      'socials.instagram': settings.socials?.instagram || '',
+      'socials.twitter': settings.socials?.twitter || '',
+      'socials.youtube': settings.socials?.youtube || '',
+    });
+  }, [settings, form]);
+
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     
     const formData = new FormData(event.currentTarget);
-    formData.set('primaryColor', primaryColor);
-    formData.set('primaryColorDark', primaryColorDark);
-
-    // This is needed to get all form field values for the client-side update
     const formValues = form.getValues();
-    
+
     try {
         await updateSettingsAction(formData);
         
-        // Update client-side state
+        // This is a bit of a workaround to get the new logo URL if it was uploaded
+        const logoFile = formData.get('logo') as File | null;
+        let newLogoUrl = settings.logoUrl;
+        if(logoFile && logoFile.size > 0) {
+            // we can't know the final s3 url here, but we can display a local preview
+            newLogoUrl = URL.createObjectURL(logoFile);
+        } else if (formData.has('isLogoRemoved')) {
+            newLogoUrl = '';
+        } else if(formData.has('currentImage')){
+            newLogoUrl = formData.get('currentImage') as string;
+        }
+
         updateSettings({
             ...formValues,
-            logoUrl: (formData.get('logo') as File)?.size > 0 
-                ? URL.createObjectURL(formData.get('logo') as File) 
-                : (formData.get('currentImage') as string || settings.logoUrl),
-            primaryColor,
-            primaryColorDark,
+            logoUrl: newLogoUrl,
         });
 
         toast({
@@ -263,40 +281,42 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                         <ImageDropzone name="logo" initialImage={settings.logoUrl} />
                     </div>
                     <div className="space-y-6">
-                        <div>
-                        <Label>Primary Color (Light)</Label>
-                        <div className="flex items-center gap-2">
-                            <Input 
-                                type="color" 
-                                value={primaryColor}
-                                onChange={(e) => setPrimaryColor(e.target.value)}
-                                className="h-10 w-14 p-1"
-                            />
-                            <Input 
-                                type="text" 
-                                value={primaryColor}
-                                onChange={(e) => setPrimaryColor(e.target.value)} 
-                                className="max-w-xs" 
-                            />
-                        </div>
-                        </div>
-                        <div>
-                        <Label>Primary Color (Dark)</Label>
-                        <div className="flex items-center gap-2">
-                            <Input 
-                                type="color" 
-                                value={primaryColorDark}
-                                onChange={(e) => setPrimaryColorDark(e.target.value)}
-                                className="h-10 w-14 p-1"
-                            />
-                            <Input 
-                                type="text" 
-                                value={primaryColorDark}
-                                onChange={(e) => setPrimaryColorDark(e.target.value)} 
-                                className="max-w-xs" 
-                            />
-                        </div>
-                        </div>
+                       <FormField
+                          control={form.control}
+                          name="primaryColor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Primary Color (Light)</FormLabel>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Input type="color" className="h-10 w-14 p-1" {...field} />
+                                </FormControl>
+                                <FormControl>
+                                  <Input type="text" className="max-w-xs" {...field} />
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="primaryColorDark"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Primary Color (Dark)</FormLabel>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Input type="color" className="h-10 w-14 p-1" {...field} />
+                                </FormControl>
+                                <FormControl>
+                                  <Input type="text" className="max-w-xs" {...field} />
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                             control={form.control}
                             name="theme"
@@ -330,7 +350,6 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                                         <SelectContent>
                                             <SelectItem value="inter">Inter</SelectItem>
                                             <SelectItem value="poppins">Poppins</SelectItem>
-                                            <SelectItem value="system-sans">System Sans-serif</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

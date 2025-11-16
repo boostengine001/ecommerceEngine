@@ -9,6 +9,8 @@ export default function ThemeInjector() {
   const { settings } = useSettings();
 
   useEffect(() => {
+    if (!settings.primaryColor || !settings.primaryColorDark) return;
+
     const primaryColorLightHsl = hexToHsl(settings.primaryColor);
     const primaryColorDarkHsl = hexToHsl(settings.primaryColorDark);
 
@@ -19,10 +21,8 @@ export default function ThemeInjector() {
     style.id = 'theme-variables';
     style.innerHTML = `
       :root { 
-        --primary-light: hsl(${primaryColorLightHsl});
-        --primary-light-hsl: ${primaryColorLightHsl};
-        --primary-dark: hsl(${primaryColorDarkHsl});
-        --primary-dark-hsl: ${primaryColorDarkHsl};
+        --primary-light: ${primaryColorLightHsl};
+        --primary-dark: ${primaryColorDarkHsl};
         --font-body: ${fontBody};
         --font-headline: ${fontHeadline};
       }
