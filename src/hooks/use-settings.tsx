@@ -1,28 +1,35 @@
 
 "use client";
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 import type { ISettings } from '@/models/Setting';
 import type { ICategory } from '@/models/Category';
 
 interface SettingsContextType {
   settings: ISettings;
   categories: ICategory[];
+  updateSettings: (newSettings: Partial<ISettings>) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider = ({ 
     children, 
-    settings, 
-    categories 
+    initialSettings, 
+    initialCategories 
 }: { 
     children: ReactNode, 
-    settings: ISettings, 
-    categories: ICategory[] 
+    initialSettings: ISettings, 
+    initialCategories: ICategory[] 
 }) => {
+  const [settings, setSettings] = useState<ISettings>(initialSettings);
+
+  const updateSettings = useCallback((newSettings: Partial<ISettings>) => {
+    setSettings(prev => ({ ...prev, ...newSettings }));
+  }, []);
+
   return (
-    <SettingsContext.Provider value={{ settings, categories }}>
+    <SettingsContext.Provider value={{ settings, categories: initialCategories, updateSettings }}>
       {children}
     </SettingsContext.Provider>
   );
