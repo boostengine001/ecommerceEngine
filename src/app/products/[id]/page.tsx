@@ -89,7 +89,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
        <div className="mt-12 md:mt-16">
-        <Accordion type="single" collapsible defaultValue='description' className="w-full space-y-4">
+        <Accordion type="multiple" defaultValue={['description', 'specifications', 'reviews']} className="w-full space-y-4">
           <AccordionItem value="description">
             <AccordionTrigger className="text-lg font-medium">
               <div className="flex items-center gap-2">
