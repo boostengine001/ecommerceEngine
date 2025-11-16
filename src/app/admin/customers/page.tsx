@@ -1,4 +1,5 @@
 
+
 import {
   Card,
   CardContent,
@@ -42,7 +43,7 @@ function CustomerCard({ user }: { user: IUser }) {
         </Avatar>
         <div className="flex-1">
           <CardTitle className="text-lg">{user.firstName} {user.lastName}</CardTitle>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+          <p className="text-sm text-muted-foreground">{user.email || user.phone}</p>
         </div>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -60,10 +61,11 @@ function CustomerCard({ user }: { user: IUser }) {
             </DropdownMenuContent>
           </DropdownMenu>
       </CardHeader>
-       <CardFooter>
+       <CardFooter className="gap-2">
+          {user.isGuest && <Badge variant="destructive">Guest</Badge>}
           {role ? (
             <Badge variant="secondary">{role.name}</Badge>
-          ) : (
+          ) : !user.isGuest && (
             <span className="text-sm text-muted-foreground">No Role</span>
           )}
         </CardFooter>
@@ -110,7 +112,7 @@ export default async function AdminCustomersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
@@ -129,13 +131,16 @@ export default async function AdminCustomersPage() {
                         <span>{user.firstName} {user.lastName}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.email || user.phone}</TableCell>
                     <TableCell>
-                      {user.role ? (
-                        <Badge variant="secondary">{(user.role as IRole).name}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">No Role</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                          {user.isGuest && <Badge variant="destructive">Guest</Badge>}
+                          {user.role ? (
+                            <Badge variant="secondary">{(user.role as IRole).name}</Badge>
+                          ) : !user.isGuest && (
+                            <span className="text-muted-foreground">No Role</span>
+                          )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>

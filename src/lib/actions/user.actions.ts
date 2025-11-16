@@ -220,7 +220,7 @@ export async function loginWithPhone(data: unknown) {
 export async function getUsers(): Promise<IUser[]> {
     await dbConnect();
     await Role.find({});
-    const users = await User.find({ isGuest: { $ne: true } }).populate('role').sort({ createdAt: -1 }).lean();
+    const users = await User.find({}).populate('role').sort({ createdAt: -1 }).lean();
     return JSON.parse(JSON.stringify(users));
 }
 
