@@ -100,7 +100,7 @@ export default function CheckoutForm({ totalAmount, discount, couponCode }: Chec
 
                 if (result.isVerified) {
                     clearCart();
-                    router.push('/order-confirmed');
+                    router.push(`/order-confirmed?orderId=${result.orderId}`);
                 } else {
                      toast({
                         variant: "destructive",

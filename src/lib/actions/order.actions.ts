@@ -99,25 +99,31 @@ export async function verifyPayment(data: {
     
     const isVerified = expectedSignature === data.razorpay_signature;
 
+    let order;
     if (isVerified) {
-        await Order.findOneAndUpdate(
+        order = await Order.findOneAndUpdate(
             { razorpayOrderId: data.razorpay_order_id },
             {
                 status: 'Paid',
                 razorpayPaymentId: data.razorpay_payment_id,
                 razorpaySignature: data.razorpay_signature,
-            }
+            },
+            { new: true } // Return the updated document
         );
     } else {
-        await Order.findOneAndUpdate(
+        order = await Order.findOneAndUpdate(
             { razorpayOrderId: data.razorpay_order_id },
-            { status: 'Failed' }
+            { status: 'Failed' },
+            { new: true }
         );
     }
     
     revalidatePath('/admin/orders');
 
-    return { isVerified };
+    return { 
+        isVerified,
+        orderId: order?.orderId 
+    };
 }
 
 export async function getOrders(): Promise<IOrder[]> {
