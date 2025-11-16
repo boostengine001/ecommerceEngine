@@ -38,8 +38,10 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet" />
         <style id="theme-variables" dangerouslySetInnerHTML={{__html: `
           :root { 
-            --primary-light: ${primaryColorLightHsl};
-            --primary-dark: ${primaryColorDarkHsl};
+            --primary-light: hsl(${primaryColorLightHsl});
+            --primary-light-hsl: ${primaryColorLightHsl};
+            --primary-dark: hsl(${primaryColorDarkHsl});
+            --primary-dark-hsl: ${primaryColorDarkHsl};
             --font-body: 'Inter', sans-serif;
             --font-headline: 'Poppins', sans-serif;
           }
