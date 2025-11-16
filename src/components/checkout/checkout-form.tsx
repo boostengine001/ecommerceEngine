@@ -17,7 +17,9 @@ import { createOrder, verifyPayment } from '@/lib/actions/order.actions';
 import { useToast } from '@/hooks/use-toast';
 import type { ISettings } from '@/models/Setting';
 import { getSettings } from '@/lib/actions/setting.actions';
-import { PhoneInput } from '@/components/ui/phone-input';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { cn } from '@/lib/utils';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { IAddress } from '@/models/User';
@@ -214,7 +216,15 @@ export default function CheckoutForm({ totalAmount, discount, couponCode }: Chec
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <PhoneInput international defaultCountry="IN" {...field} />
+                            <PhoneInput
+                                international
+                                defaultCountry="IN"
+                                className={cn(
+                                    'flex h-10 w-full rounded-md border border-input bg-background pl-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                    '[&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0'
+                                )}
+                                {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
