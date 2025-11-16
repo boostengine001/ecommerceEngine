@@ -56,40 +56,29 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="group relative flex h-full flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl">
-      <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden">
+       <div className="absolute top-2 right-2 z-20">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-9 w-9 rounded-full bg-background/60 text-muted-foreground backdrop-blur-sm transition-all hover:bg-background"
+            onClick={handleWishlistClick}
+          >
+            <Heart className={cn("h-5 w-5", onWishlist && "fill-destructive text-destructive")} />
+            <span className="sr-only">Add to wishlist</span>
+          </Button>
+      </div>
+      <Link href={`/products/${product.slug}`} className="block overflow-hidden">
+        <div className="relative aspect-square">
           {isOnSale && (
             <Badge className="absolute top-2 left-2 z-10" variant="destructive">Sale</Badge>
           )}
-          
-          <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-9 w-9 rounded-full bg-background/60 text-muted-foreground backdrop-blur-sm transition-all hover:bg-background"
-              onClick={handleWishlistClick}
-            >
-              <Heart className={cn("h-5 w-5", onWishlist && "fill-destructive text-destructive")} />
-              <span className="sr-only">Add to wishlist</span>
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-9 w-9 shrink-0 rounded-full bg-background/60 text-muted-foreground backdrop-blur-sm transition-all hover:bg-background md:hidden"
-              onClick={handleAddToCart}
-            >
-              <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">Add to Cart</span>
-            </Button>
-          </div>
 
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={product.name}
-              width={600}
-              height={600}
-              className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+              fill
+              className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-muted">
@@ -99,12 +88,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
       <CardContent className="flex flex-1 flex-col p-4">
-        <h3 className="mb-2 text-base font-medium md:text-lg">
+        <h3 className="mb-2 flex-grow text-base font-medium md:text-lg">
           <Link href={`/products/${product.slug}`} className="hover:text-primary">
             {product.name}
           </Link>
         </h3>
-        <div className="flex-grow" />
         <div className="mt-2 flex items-baseline justify-between gap-4">
             <div className="flex flex-col">
                 <p className={`text-lg font-semibold md:text-xl ${isOnSale ? 'text-destructive' : 'text-primary'}`}>
@@ -118,8 +106,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
         </div>
       </CardContent>
-      <div className="hidden p-4 pt-0 md:block">
-        <Button onClick={handleAddToCart} className="w-full opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+
+      <div className="absolute bottom-0 left-0 w-full p-2 opacity-0 transition-all duration-300 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 hidden md:block">
+        <Button onClick={handleAddToCart} className="w-full">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add to Cart
+        </Button>
+      </div>
+
+       <div className="p-2 pt-0 md:hidden">
+        <Button onClick={handleAddToCart} className="w-full" variant="secondary">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add to Cart
         </Button>
