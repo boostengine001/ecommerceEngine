@@ -15,7 +15,7 @@ import { revalidatePath } from 'next/cache';
 import { uploadFile } from '../s3';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../mail';
-import { addressSchema } from '@/components/profile/address-form';
+import { addressSchema } from '@/lib/schemas/address.schema';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const COOKIE_NAME = 'session_token';
