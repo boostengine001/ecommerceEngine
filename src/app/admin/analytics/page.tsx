@@ -13,7 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, Tooltip } from 'recharts';
 import { useMemo, useState, useEffect } from 'react';
 import { DollarSign, Package, Users, ShoppingCart, TrendingUp, UserPlus } from 'lucide-react';
 import { getProducts } from '@/lib/actions/product.actions';
@@ -28,6 +28,17 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 const chartConfigPie = { products: { label: 'Products' } } as const;
 const chartConfigBar = { sales: { label: 'Sales', color: 'hsl(var(--chart-1))' } };
 const chartConfigLine = { revenue: { label: 'Revenue', color: 'hsl(var(--chart-2))' } };
+
+const CustomYAxisTick = ({ y, payload }: any) => {
+  return (
+    <g transform={`translate(0,${y})`}>
+      <text x={0} y={0} dy={4} textAnchor="start" fill="#666" style={{ fontSize: 12 }}>
+        {payload.value}
+      </text>
+    </g>
+  );
+};
+
 
 export default function AnalyticsPage() {
   const [products, setProducts] = useState<IProduct[]>([]);
@@ -235,11 +246,11 @@ export default function AnalyticsPage() {
           <CardContent>
              {filteredData.topSellingProducts.length > 0 ? (
                 <ChartContainer config={chartConfigBar} className="h-[250px] w-full">
-                    <BarChart data={filteredData.topSellingProducts} layout="vertical" margin={{ left: 20, right: 0, top: 5, bottom: 5}}>
+                    <BarChart data={filteredData.topSellingProducts} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5}}>
                         <CartesianGrid horizontal={false} />
-                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={120} />
+                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={100} tick={<CustomYAxisTick />} />
                         <XAxis type="number" dataKey="sales"/>
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                        <Tooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent indicator="line" />} />
                         <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
                     </BarChart>
                 </ChartContainer>
