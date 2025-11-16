@@ -10,7 +10,7 @@ export interface IAddress extends Document {
   city: string;
   zip: string;
   phone: string;
-  isDefault?: boolean;
+  isDefault: boolean;
 }
 
 export interface IUser extends Document {
@@ -68,10 +68,19 @@ UserSchema.pre('save', function(this: IUser, next) {
     // Ensure there is only one default address
     if (this.isModified('addresses') && this.addresses && this.addresses.length > 0) {
         const defaultAddresses = this.addresses.filter(addr => addr.isDefault);
-        if (defaultAddresses.length > 1) {
-            return next(new Error('Only one address can be set as default.'));
+        
+        // If user tries to set multiple defaults, or adds a new default, unset all others
+        if (defaultAddresses.length > 1 || (this.isNew && defaultAddresses.length === 1)) {
+            this.addresses.forEach(addr => {
+                if (addr.isDefault && addr._id !== defaultAddresses[defaultAddresses.length -1]._id) {
+                    addr.isDefault = false;
+                }
+            });
         }
-        if (defaultAddresses.length === 0 && this.addresses.length > 0) {
+
+        // If no default address is set, make the first one the default
+        const hasDefault = this.addresses.some(addr => addr.isDefault);
+        if (!hasDefault && this.addresses.length > 0) {
             this.addresses[0].isDefault = true;
         }
     }

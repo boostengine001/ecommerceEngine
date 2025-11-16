@@ -304,45 +304,46 @@ export async function updateUserProfile(formData: FormData) {
 
 export async function addAddress(userId: string, addressData: unknown) {
     await dbConnect();
-
-    const dbUser = await User.findById(userId);
-    if (!dbUser) throw new Error("User not found.");
-
     const result = addressSchema.safeParse(addressData);
-    if (!result.success) throw new Error("Invalid address data.");
-    
-    if (result.data.isDefault) {
-        dbUser.addresses.forEach(addr => addr.isDefault = false);
+    if (!result.success) {
+        throw new Error("Invalid address data: " + result.error.flatten().fieldErrors);
     }
+    
+    const dbUser = await User.findById(userId);
+    if (!dbUser) {
+        throw new Error("User not found.");
+    }
+    
     dbUser.addresses.push(result.data);
     await dbUser.save();
+    
     revalidatePath('/profile');
     revalidatePath('/checkout');
 }
 
 export async function updateAddress(userId: string, addressId: string, addressData: unknown) {
     await dbConnect();
+    const result = addressSchema.safeParse(addressData);
+    if (!result.success) {
+        throw new Error("Invalid address data: " + result.error.flatten().fieldErrors);
+    }
 
     const dbUser = await User.findById(userId);
-    if (!dbUser) throw new Error("User not found.");
-    
-    const result = addressSchema.safeParse(addressData);
-    if (!result.success) throw new Error("Invalid address data.");
-
-    if (result.data.isDefault) {
-        dbUser.addresses.forEach(addr => addr.isDefault = false);
+    if (!dbUser) {
+        throw new Error("User not found.");
     }
 
     const addressIndex = dbUser.addresses.findIndex(addr => addr._id.toString() === addressId);
-    if (addressIndex === -1) throw new Error("Address not found.");
+    if (addressIndex === -1) {
+        throw new Error("Address not found.");
+    }
     
-    const updatedAddress = {
-        ...dbUser.addresses[addressIndex].toObject(),
-        ...result.data
-    };
-
-    dbUser.addresses[addressIndex] = updatedAddress as IAddress;
+    // Mongoose subdocuments are not plain objects, so we need to set properties individually
+    const addrToUpdate = dbUser.addresses[addressIndex];
+    Object.assign(addrToUpdate, result.data);
+    
     await dbUser.save();
+    
     revalidatePath('/profile');
     revalidatePath('/checkout');
 }

@@ -77,7 +77,7 @@ export async function createOrder(payload: CreateOrderPayload) {
             );
             if (!addressExists) {
                 if(dbUser.addresses.length === 0) {
-                    shippingAddress.isDefault = true;
+                    (shippingAddress as any).isDefault = true;
                 }
                 dbUser.addresses.push(shippingAddress as any);
                 await dbUser.save();
