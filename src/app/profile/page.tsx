@@ -70,8 +70,8 @@ function ProfileForm({ user }: { user: ClientUser }) {
                 <Input type='email' value={user.email || 'No email set'} readOnly disabled />
             </div>
             <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input type='tel' value={user.phone || 'No phone set'} readOnly disabled />
+                <Label htmlFor='phone'>Phone</Label>
+                <Input id='phone' name='phone' type='tel' defaultValue={user.phone || ''} placeholder="Add your phone number"/>
             </div>
           <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
         </CardContent>
@@ -291,5 +291,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

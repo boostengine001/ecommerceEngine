@@ -278,6 +278,9 @@ export async function updateUserProfile(formData: FormData) {
 
     const lastName = formData.get('lastName') as string;
     if (lastName) user.lastName = lastName;
+
+    const phone = formData.get('phone') as string;
+    if (phone) user.phone = phone;
     
     const currentPassword = formData.get('currentPassword') as string;
     const newPassword = formData.get('newPassword') as string;
@@ -422,5 +425,3 @@ export async function deleteUserPermanently(userId: string) {
 
     revalidatePath('/admin/customers');
 }
-
-    
