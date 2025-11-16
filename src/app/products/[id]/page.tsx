@@ -9,7 +9,7 @@ import VariantSelector from '@/components/products/variant-selector';
 import ProductMediaGallery from '@/components/products/product-media-gallery';
 import { getReviewsForProduct } from '@/lib/actions/review.actions';
 import ProductReviews from '@/components/products/product-reviews';
-import { Star } from 'lucide-react';
+import { Star, FileText, List, MessageSquare } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 interface ProductPageProps {
@@ -91,9 +91,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
        <div className="mt-12 md:mt-16">
         <Tabs defaultValue="reviews" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
+            <TabsTrigger value="description" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Description</span>
+            </TabsTrigger>
+            <TabsTrigger value="specifications" className="flex items-center gap-2">
+                <List className="h-4 w-4" />
+                <span className="hidden sm:inline">Specifications</span>
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Reviews</span>
+                <span className="ml-1">({reviews.length})</span>
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="mt-6">
             <Card>
