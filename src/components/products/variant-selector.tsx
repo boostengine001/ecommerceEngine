@@ -97,10 +97,10 @@ export default function VariantSelector({ product }: VariantSelectorProps) {
          )
       )}
 
-      <div className="mt-8 flex flex-wrap items-center gap-4">
-        <AddToCartButton product={productForButtons as any} />
-        <BuyNowButton product={productForButtons as any} />
-        <WishlistButton product={product as any} />
+      <div className="mt-8 flex w-full flex-col gap-4 md:flex-row">
+        <AddToCartButton product={productForButtons as any} className="w-full" />
+        <BuyNowButton product={productForButtons as any} className="w-full" />
+        <WishlistButton product={product as any} className="w-full md:w-auto" />
       </div>
     </div>
   );
