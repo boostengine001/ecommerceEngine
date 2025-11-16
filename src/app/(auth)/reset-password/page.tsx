@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,7 +12,9 @@ import { resetPassword } from '@/lib/actions/user.actions';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const formSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters.'),
@@ -22,9 +24,8 @@ const formSchema = z.object({
   path: ['confirmPassword'],
 });
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -43,7 +44,6 @@ export default function ResetPasswordPage() {
     setLoading(true);
     try {
       await resetPassword(token, values.password);
-      setSubmitted(true);
       toast({ title: 'Success', description: 'Your password has been reset. You can now log in.' });
       router.push('/login');
     } catch (error: any) {
@@ -60,17 +60,24 @@ export default function ResetPasswordPage() {
   if (!token) {
       return (
            <div className="mx-auto grid w-full max-w-[350px] gap-6 text-center">
-                <h1 className="text-3xl font-bold">Invalid Link</h1>
-                <p className="text-balance text-muted-foreground">The password reset link is either invalid or has expired. Please request a new one.</p>
-                <Button asChild>
-                    <Link href="/forgot-password">Request a new link</Link>
-                </Button>
+                 <Card>
+                    <CardHeader className="items-center">
+                        <ShieldAlert className="h-12 w-12 text-destructive"/>
+                        <CardTitle>Invalid Link</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-balance text-muted-foreground">The password reset link is either invalid or has expired. Please request a new one.</p>
+                        <Button asChild className="mt-6 w-full">
+                            <Link href="/forgot-password">Request a new link</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
             </div>
       )
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-[350px] gap-6">
+    <>
       <div className="grid gap-2 text-center">
         <h1 className="text-3xl font-bold">Reset Password</h1>
         <p className="text-balance text-muted-foreground">
@@ -117,6 +124,40 @@ export default function ResetPasswordPage() {
           Login
         </Link>
       </div>
-    </div>
+    </>
   );
+}
+
+
+function ResetPasswordSkeleton() {
+    return (
+        <div className="grid w-full max-w-[350px] gap-6">
+            <div className="grid gap-2 text-center">
+                <Skeleton className="h-9 w-48 mx-auto" />
+                <Skeleton className="h-5 w-64 mx-auto" />
+            </div>
+            <div className="grid gap-4">
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+                 <div className="space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+                <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-5 w-48 mx-auto mt-4" />
+        </div>
+    )
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <div className="mx-auto grid w-full max-w-[350px] gap-6">
+            <Suspense fallback={<ResetPasswordSkeleton />}>
+                <ResetPasswordForm />
+            </Suspense>
+        </div>
+    )
 }
