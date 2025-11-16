@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import type { IRole } from '@/models/Role';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 interface DeleteRoleButtonProps {
   role: IRole;
@@ -38,26 +39,26 @@ export default function DeleteRoleButton({ role }: DeleteRoleButtonProps) {
   return (
     <>
       {role.isDeleted ? (
-        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => recoverRole(role._id), 'Role recovered')}>
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleAction(() => recoverRole(role._id), 'Role recovered')}}>
           <ArchiveRestore className="mr-2 h-4 w-4" />
           Recover
-        </Button>
+        </DropdownMenuItem>
       ) : (
-        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => deleteRole(role._id), 'Role deleted')}>
+        <DropdownMenuItem onSelect={(e) => {e.preventDefault(); handleAction(() => deleteRole(role._id), 'Role deleted')}}>
           <Archive className="mr-2 h-4 w-4" />
           Delete
-        </Button>
+        </DropdownMenuItem>
       )}
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <button className={cn(
-            'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-            'w-full justify-start font-normal text-destructive hover:text-destructive'
-          )}>
+          <DropdownMenuItem
+            className="text-destructive hover:!text-destructive"
+            onSelect={(e) => e.preventDefault()}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Permanently
-          </button>
+          </DropdownMenuItem>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>

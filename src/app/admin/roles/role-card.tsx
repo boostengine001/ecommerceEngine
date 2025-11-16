@@ -45,9 +45,7 @@ export function RoleCard({ role }: { role: RoleWithUserCount }) {
                     <Link href={`/admin/roles/${role._id}/edit`}>Edit</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteRoleButton role={role} />
-                </DropdownMenuItem>
+                 <DeleteRoleButton role={role} />
             </DropdownMenuContent>
             </DropdownMenu>
       </CardHeader>
@@ -56,7 +54,7 @@ export function RoleCard({ role }: { role: RoleWithUserCount }) {
             <Badge variant="secondary">{role.permissions.length} Permissions</Badge>
             <span className="text-sm text-muted-foreground">{role.userCount} User(s)</span>
         </div>
-        <Badge variant={role.isDeleted ? 'secondary' : 'default'}>{role.isDeleted ? 'Deleted' : 'Active'}</Badge>
+        <Badge variant={role.isDeleted ? 'destructive' : 'default'}>{role.isDeleted ? 'Deleted' : 'Active'}</Badge>
       </CardContent>
     </Card>
   )

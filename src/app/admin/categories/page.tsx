@@ -8,6 +8,9 @@ import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import {
   Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import Image from 'next/image';
 import { MoreHorizontal } from 'lucide-react';
@@ -50,9 +53,7 @@ function CategoryCard({ category }: { category: ICategory }) {
                         <Link href={`/admin/categories/${category._id}/edit`}>Edit</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                        <DeleteCategoryButton category={category} />
-                    </DropdownMenuItem>
+                    <DeleteCategoryButton category={category} />
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

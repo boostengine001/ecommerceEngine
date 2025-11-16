@@ -19,6 +19,29 @@ import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import DeleteRoleButton from "./delete-role-button";
 
+function RoleActions({ role }: { role: IRole }) {
+  return (
+     <div className="flex items-center justify-end gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link href={`/admin/roles/${role._id}/edit`}>Edit</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DeleteRoleButton role={role} />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 export const columns: ColumnDef<IRole & { userCount: number }>[] = [
     {
     id: "select",
@@ -87,36 +110,11 @@ export const columns: ColumnDef<IRole & { userCount: number }>[] = [
     header: "Status",
     cell: ({ row }) => {
         const isDeleted = row.original.isDeleted;
-        return <Badge variant={isDeleted ? 'secondary' : 'default'}>{isDeleted ? 'Deleted' : 'Active'}</Badge>
+        return <Badge variant={isDeleted ? 'destructive' : 'default'}>{isDeleted ? 'Deleted' : 'Active'}</Badge>
     }
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const role = row.original
- 
-      return (
-        <div className="flex items-center justify-end gap-2">
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                    <Link href={`/admin/roles/${role._id}/edit`}>Edit</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} asChild>
-                    <DeleteRoleButton role={role} />
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-      )
-    },
+    cell: ({ row }) => <RoleActions role={row.original} />,
   },
 ]

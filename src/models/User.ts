@@ -60,7 +60,7 @@ UserSchema.pre('save', function(next) {
     }
     
     // Ensure there is only one default address
-    if (this.isModified('addresses')) {
+    if (this.isModified('addresses') && this.addresses && this.addresses.length > 0) {
         const defaultAddresses = this.addresses.filter(addr => addr.isDefault);
         if (defaultAddresses.length > 1) {
             return next(new Error('Only one address can be set as default.'));

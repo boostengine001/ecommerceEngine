@@ -19,6 +19,8 @@ import { Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { ICategory } from '@/models/Category';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+
 
 interface DeleteCategoryButtonProps {
   category: ICategory;
@@ -39,26 +41,26 @@ export default function DeleteCategoryButton({ category }: DeleteCategoryButtonP
   return (
     <>
       {category.isDeleted ? (
-        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => recoverCategory(category._id), 'Category recovered')}>
+        <DropdownMenuItem onSelect={(e) => {e.preventDefault(); handleAction(() => recoverCategory(category._id), 'Category recovered')}}>
           <ArchiveRestore className="mr-2 h-4 w-4" />
           Recover
-        </Button>
+        </DropdownMenuItem>
       ) : (
-        <Button variant="ghost" className="w-full justify-start text-sm font-normal" onClick={() => handleAction(() => deleteCategory(category._id), 'Category deleted')}>
+        <DropdownMenuItem onSelect={(e) => {e.preventDefault(); handleAction(() => deleteCategory(category._id), 'Category deleted')}}>
           <Archive className="mr-2 h-4 w-4" />
           Delete
-        </Button>
+        </DropdownMenuItem>
       )}
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <button className={cn(
-            'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-            'w-full justify-start font-normal text-destructive hover:text-destructive'
-          )}>
+           <DropdownMenuItem
+            className="text-destructive hover:!text-destructive"
+            onSelect={(e) => e.preventDefault()}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Permanently
-          </button>
+          </DropdownMenuItem>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
