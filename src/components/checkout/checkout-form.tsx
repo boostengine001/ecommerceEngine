@@ -17,6 +17,8 @@ import { createOrder, verifyPayment } from '@/lib/actions/order.actions';
 import { useToast } from '@/hooks/use-toast';
 import type { ISettings } from '@/models/Setting';
 import { getSettings } from '@/lib/actions/setting.actions';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { isValidPhoneNumber } from 'react-phone-number-input';
 
 declare global {
     interface Window {
@@ -31,7 +33,7 @@ const formSchema = z.object({
   city: z.string().min(2, "City is required"),
   zip: z.string().min(5, "ZIP code is required"),
   email: z.string().email(),
-  phone: z.string().min(10, "Phone number is required"),
+  phone: z.string().refine(isValidPhoneNumber, { message: "Invalid phone number" }),
 });
 
 interface CheckoutFormProps {
@@ -158,9 +160,19 @@ export default function CheckoutForm({ totalAmount, discount, couponCode }: Chec
                  <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                 <FormField control={form.control} name="phone" render={({ field }) => (
-                    <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
+                 <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <PhoneInput international defaultCountry="IN" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                </div>
               <FormField control={form.control} name="address" render={({ field }) => (
                 <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

@@ -31,6 +31,7 @@ import { updateSettings } from '@/lib/actions/setting.actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import ImageDropzone from '../image-dropzone';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 export default function SettingsForm({ settings }: { settings: ISettings }) {
   const { toast } = useToast();
@@ -135,12 +136,21 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                       </div>
                       <div>
                           <Label htmlFor="phone">Phone Number</Label>
-                          <Input id="phone" name="phone" defaultValue={settings.phone} />
+                           <PhoneInput
+                              id="phone"
+                              name="phone"
+                              defaultValue={settings.phone}
+                            />
                       </div>
                   </div>
                   <div>
                       <Label htmlFor="whatsapp">WhatsApp Number</Label>
-                      <Input id="whatsapp" name="whatsapp" placeholder="+1234567890" defaultValue={settings.whatsapp} />
+                       <PhoneInput
+                          id="whatsapp"
+                          name="whatsapp"
+                          placeholder="+1 234 567 890"
+                          defaultValue={settings.whatsapp}
+                        />
                   </div>
                 </div>
                 <div className="space-y-4 border-t pt-6">
