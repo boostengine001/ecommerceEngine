@@ -193,6 +193,11 @@ export default function Header() {
             <div className="hidden w-full max-w-xs lg:block">
                 <SearchSuggestions />
             </div>
+            
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSearchOpen(true)}>
+                <Search className="h-6 w-6" />
+                <span className="sr-only">Search</span>
+            </Button>
 
             <div className="hidden md:flex md:items-center md:gap-2">
               <UserNav />
