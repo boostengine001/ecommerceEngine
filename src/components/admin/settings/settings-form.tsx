@@ -102,13 +102,21 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
   }, [settings, form]);
 
 
-  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
-    
-    const formData = new FormData(event.currentTarget);
-    const formValues = form.getValues();
 
+    const formData = new FormData();
+    Object.entries(values).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+             formData.append(key, value.toString());
+        }
+    });
+
+    const logoInput = document.querySelector('input[name="logo"]') as HTMLInputElement;
+    if (logoInput && logoInput.files && logoInput.files.length > 0) {
+        formData.append('logo', logoInput.files[0]);
+    }
+    
     try {
         await updateSettingsAction(formData);
         
@@ -116,7 +124,6 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
         const logoFile = formData.get('logo') as File | null;
         let newLogoUrl = settings.logoUrl;
         if(logoFile && logoFile.size > 0) {
-            // we can't know the final s3 url here, but we can display a local preview
             newLogoUrl = URL.createObjectURL(logoFile);
         } else if (formData.has('isLogoRemoved')) {
             newLogoUrl = '';
@@ -125,7 +132,7 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
         }
 
         updateSettings({
-            ...formValues,
+            ...values,
             logoUrl: newLogoUrl,
         });
 
@@ -148,7 +155,7 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleFormSubmit}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
         <Tabs defaultValue="store">
             <TabsList>
                 <TabsTrigger value="store">Store</TabsTrigger>
@@ -158,207 +165,217 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
 
             <TabsContent value="store" className="mt-6">
                  <Card>
-                <CardHeader>
-                    <CardTitle>Store Details</CardTitle>
-                    <CardDescription>
-                    Update your store's name, contact information, and social media links.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                    <FormField
-                        control={form.control}
-                        name="storeName"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Store Name</FormLabel>
-                            <FormControl>
-                            <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="storeAddress"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Store Address</FormLabel>
-                            <FormControl>
-                            <Textarea {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    </div>
-                    <div className="space-y-4 border-t pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CardHeader>
+                        <CardTitle>Store Details</CardTitle>
+                        <CardDescription>
+                        Update your store's name, contact information, and social media links.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-4">
                         <FormField
                             control={form.control}
-                            name="contactEmail"
+                            name="storeName"
                             render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Contact Email</FormLabel>
+                            <FormItem>
+                                <FormLabel>Store Name</FormLabel>
                                 <FormControl>
-                                    <Input type="email" {...field} />
+                                <Input {...field} />
                                 </FormControl>
                                 <FormMessage />
-                                </FormItem>
+                            </FormItem>
                             )}
-                            />
+                        />
+                        <FormField
+                            control={form.control}
+                            name="storeAddress"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Store Address</FormLabel>
+                                <FormControl>
+                                <Textarea {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        </div>
+                        <div className="space-y-4 border-t pt-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="contactEmail"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Contact Email</FormLabel>
+                                    <FormControl>
+                                        <Input type="email" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                <FormField
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Phone Number</FormLabel>
+                                    <FormControl>
+                                        <PhoneInput
+                                        international
+                                        defaultCountry="IN"
+                                        className={cn(
+                                            'flex h-10 w-full rounded-md border border-input bg-background pl-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                            '[&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0'
+                                        )}
+                                        {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                        </div>
                             <FormField
                             control={form.control}
-                            name="phone"
+                            name="whatsapp"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Phone Number</FormLabel>
+                                <FormLabel>WhatsApp Number</FormLabel>
                                 <FormControl>
                                     <PhoneInput
-                                    international
-                                    defaultCountry="IN"
-                                    className={cn(
+                                        international
+                                        defaultCountry="IN"
+                                        placeholder="+1 234 567 890"
+                                        className={cn(
                                         'flex h-10 w-full rounded-md border border-input bg-background pl-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
                                         '[&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0'
-                                    )}
-                                    {...field}
+                                        )}
+                                        {...field}
                                     />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )}
                             />
-                    </div>
-                        <FormField
-                        control={form.control}
-                        name="whatsapp"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>WhatsApp Number</FormLabel>
-                            <FormControl>
-                                <PhoneInput
-                                    international
-                                    defaultCountry="IN"
-                                    placeholder="+1 234 567 890"
-                                    className={cn(
-                                    'flex h-10 w-full rounded-md border border-input bg-background pl-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                    '[&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0'
-                                    )}
-                                    {...field}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    </div>
-                    <div className="space-y-4 border-t pt-6">
-                        <h3 className="text-lg font-medium">Social Media</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField control={form.control} name="socials.facebook" render={({field}) => (<FormItem><FormLabel>Facebook URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
-                        <FormField control={form.control} name="socials.instagram" render={({field}) => (<FormItem><FormLabel>Instagram URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
-                        <FormField control={form.control} name="socials.twitter" render={({field}) => (<FormItem><FormLabel>Twitter (X) URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
-                        <FormField control={form.control} name="socials.youtube" render={({field}) => (<FormItem><FormLabel>YouTube URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
                         </div>
-                    </div>
-                </CardContent>
+                        <div className="space-y-4 border-t pt-6">
+                            <h3 className="text-lg font-medium">Social Media</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField control={form.control} name="socials.facebook" render={({field}) => (<FormItem><FormLabel>Facebook URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
+                            <FormField control={form.control} name="socials.instagram" render={({field}) => (<FormItem><FormLabel>Instagram URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
+                            <FormField control={form.control} name="socials.twitter" render={({field}) => (<FormItem><FormLabel>Twitter (X) URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
+                            <FormField control={form.control} name="socials.youtube" render={({field}) => (<FormItem><FormLabel>YouTube URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
+                            </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="justify-end">
+                        <Button type="submit" disabled={loading} size="lg">
+                            {loading ? 'Saving...' : 'Save Settings'}
+                        </Button>
+                    </CardFooter>
                 </Card>
             </TabsContent>
 
             <TabsContent value="appearance" className="mt-6">
                 <Card>
-                <CardHeader>
-                    <CardTitle>Appearance</CardTitle>
-                    <CardDescription>
-                    Customize the look and feel of your store.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                        <Label>Logo</Label>
-                        <ImageDropzone name="logo" initialImage={settings.logoUrl} />
-                    </div>
-                    <div className="space-y-6">
-                       <FormField
-                          control={form.control}
-                          name="primaryColor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Primary Color (Light)</FormLabel>
-                              <div className="flex items-center gap-2">
-                                <FormControl>
-                                  <Input type="color" className="h-10 w-14 p-1" {...field} />
-                                </FormControl>
-                                <FormControl>
-                                  <Input type="text" className="max-w-xs" {...field} />
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="primaryColorDark"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Primary Color (Dark)</FormLabel>
-                              <div className="flex items-center gap-2">
-                                <FormControl>
-                                  <Input type="color" className="h-10 w-14 p-1" {...field} />
-                                </FormControl>
-                                <FormControl>
-                                  <Input type="text" className="max-w-xs" {...field} />
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <CardHeader>
+                        <CardTitle>Appearance</CardTitle>
+                        <CardDescription>
+                        Customize the look and feel of your store.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <Label>Logo</Label>
+                            <ImageDropzone name="logo" initialImage={settings.logoUrl} />
+                        </div>
+                        <div className="space-y-6">
                         <FormField
                             control={form.control}
-                            name="theme"
+                            name="primaryColor"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Theme</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger><SelectValue placeholder="Select a theme" /></SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="light">Light</SelectItem>
-                                            <SelectItem value="dark">Dark</SelectItem>
-                                            <SelectItem value="system">System</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
+                                <FormLabel>Primary Color (Light)</FormLabel>
+                                <div className="flex items-center gap-2">
+                                    <FormControl>
+                                    <Input type="color" className="h-10 w-14 p-1" {...field} />
+                                    </FormControl>
+                                    <FormControl>
+                                    <Input type="text" className="max-w-xs" {...field} />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
                                 </FormItem>
                             )}
-                        />
-                         <FormField
+                            />
+                            <FormField
                             control={form.control}
-                            name="font"
+                            name="primaryColorDark"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Font</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger><SelectValue placeholder="Select a font" /></SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="inter">Inter</SelectItem>
-                                            <SelectItem value="poppins">Poppins</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
+                                <FormLabel>Primary Color (Dark)</FormLabel>
+                                <div className="flex items-center gap-2">
+                                    <FormControl>
+                                    <Input type="color" className="h-10 w-14 p-1" {...field} />
+                                    </FormControl>
+                                    <FormControl>
+                                    <Input type="text" className="max-w-xs" {...field} />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
                                 </FormItem>
                             )}
-                        />
-                    </div>
-                    </div>
-                </CardContent>
+                            />
+                            <FormField
+                                control={form.control}
+                                name="theme"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Theme</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger><SelectValue placeholder="Select a theme" /></SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="light">Light</SelectItem>
+                                                <SelectItem value="dark">Dark</SelectItem>
+                                                <SelectItem value="system">System</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="font"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Font</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger><SelectValue placeholder="Select a font" /></SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="inter">Inter</SelectItem>
+                                                <SelectItem value="poppins">Poppins</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        </div>
+                    </CardContent>
+                     <CardFooter className="justify-end">
+                        <Button type="submit" disabled={loading} size="lg">
+                            {loading ? 'Saving...' : 'Save Settings'}
+                        </Button>
+                    </CardFooter>
                 </Card>
             </TabsContent>
             
@@ -384,12 +401,6 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
                 </Card>
             </TabsContent>
         </Tabs>
-
-        <div className="mt-6 flex justify-end">
-            <Button type="submit" disabled={loading} size="lg">
-                {loading ? 'Saving...' : 'Save All Settings'}
-            </Button>
-        </div>
       </form>
     </Form>
   );
