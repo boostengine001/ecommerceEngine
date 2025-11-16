@@ -48,6 +48,9 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') {
+    return undefined;
+  }
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
@@ -140,3 +143,6 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
+
+    
