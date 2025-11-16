@@ -1,7 +1,8 @@
+
 "use client";
 
 import Link from 'next/link';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Separator } from "@/components/ui/separator";
@@ -49,9 +50,11 @@ export function CartSheet({ children }: CartSheetProps) {
                   <span>Subtotal</span>
                   <span>{formatPrice(totalPrice)}</span>
                 </div>
-                <Button asChild className="w-full" size="lg">
-                  <Link href="/checkout">Proceed to Checkout</Link>
-                </Button>
+                <SheetClose asChild>
+                  <Button asChild className="w-full" size="lg">
+                    <Link href="/checkout">Proceed to Checkout</Link>
+                  </Button>
+                </SheetClose>
               </div>
             </SheetFooter>
           </>
