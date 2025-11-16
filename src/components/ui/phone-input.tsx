@@ -4,15 +4,12 @@
 import { Check, ChevronsUpDown } from 'lucide-react';
 import {
   Country,
-  E164Number,
-  formatIncompletePhoneNumber,
   getCountryCallingCode,
-  parsePhoneNumber,
 } from 'libphonenumber-js';
 import RPNInput, {
-  type CountryProps,
   type PhoneInputProps as RPNInputProps,
-} from 'react-phone-number-input/react-hook-form';
+  type Country as RPNCountry,
+} from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Flag from 'react-phone-number-input/flags';
 import { cn } from '@/lib/utils';
@@ -28,71 +25,30 @@ import {
 import { Input, type InputProps } from './input';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { ScrollArea } from './scroll-area';
-import { Control, FieldValues, Path, PathValue } from 'react-hook-form';
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from './form';
+import * as React from 'react';
 
-type PhoneInputProps<
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends Path<TFieldValues> = Path<TFieldValues>
-> = Omit<React.ComponentPropsWithoutRef<'input'>, 'onChange' | 'value'> & {
-  control: Control<TFieldValues>;
-  name: TName;
-  defaultValue?: PathValue<TFieldValues, TName>;
-  label?: string;
-  description?: string;
+
+type PhoneInputProps = Omit<RPNInputProps<typeof InputComponent>, 'onChange'> & {
+  onChange: (value: RPNInputProps<typeof InputComponent>['value']) => void;
 };
 
-const PhoneInput = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends Path<TFieldValues> = Path<TFieldValues>
->({
-  name,
-  control,
-  label,
-  description,
-  ...props
-}: PhoneInputProps<TFieldValues, TName>) => {
+
+const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> = React.forwardRef<
+  React.ElementRef<typeof RPNInput>,
+  PhoneInputProps
+>(({ className, onChange, ...props }, ref) => {
   return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field, fieldState: { error } }) => (
-        <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
-          <FormControl>
-            <RPNInput
-              name={field.name}
-              control={control}
-              inputComponent={InputComponent}
-              countrySelectComponent={CountrySelector}
-              rules={{
-                validate: (value) => {
-                  if (!value) return true;
-                  const phoneNumber = parsePhoneNumber(value);
-                  return !!phoneNumber?.isValid();
-                },
-              }}
-              {...props}
-              className={cn(
-                'flex',
-                error && 'rounded-md border border-destructive'
-              )}
-            />
-          </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
-        </FormItem>
-      )}
+    <RPNInput
+      ref={ref}
+      className={cn('flex', className)}
+      onChange={onChange}
+      inputComponent={InputComponent}
+      countrySelectComponent={CountrySelector}
+      {...props}
     />
   );
-};
+});
+PhoneInput.displayName = 'PhoneInput';
 
 
 const InputComponent = React.forwardRef<HTMLInputElement, InputProps>(
@@ -107,15 +63,23 @@ const InputComponent = React.forwardRef<HTMLInputElement, InputProps>(
 InputComponent.displayName = "InputComponent";
 
 
+type CountrySelectorProps = {
+  disabled?: boolean;
+  value: RPNCountry;
+  onChange: (value: RPNCountry) => void;
+  options: { value: RPNCountry; label: string }[];
+};
+
+
 const CountrySelector = ({
   disabled,
   value,
   onChange,
   options,
-}: CountryProps) => {
+}: CountrySelectorProps) => {
   const [open, setOpen] = React.useState(false);
 
-  const handleSelect = (country: Country) => {
+  const handleSelect = (country: RPNCountry) => {
     onChange(country);
     setOpen(false);
   };
@@ -150,13 +114,13 @@ const CountrySelector = ({
                   .map((option) => (
                     <CommandItem
                       key={option.value}
-                      onSelect={() => handleSelect(option.value as Country)}
-                      value={`${option.label} +${getCountryCallingCode(option.value as Country)}`}
+                      onSelect={() => handleSelect(option.value as RPNCountry)}
+                      value={`${option.label} +${getCountryCallingCode(option.value as RPNCountry)}`}
                       className="flex items-center gap-2"
                     >
-                      <Flag country={option.value as Country} countryName={option.label} />
+                      <Flag country={option.value as RPNCountry} countryName={option.label} />
                       <span className="flex-1">{option.label}</span>
-                      <span>+{getCountryCallingCode(option.value as Country)}</span>
+                      <span>+{getCountryCallingCode(option.value as RPNCountry)}</span>
                       <Check
                         className={cn(
                           'ml-auto h-4 w-4',

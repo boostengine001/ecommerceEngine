@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { PhoneInput } from '../ui/phone-input';
 import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/actions/user.actions';
 import { useRouter } from 'next/navigation';

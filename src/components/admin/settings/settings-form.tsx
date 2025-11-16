@@ -32,6 +32,31 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import ImageDropzone from '../image-dropzone';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { isValidPhoneNumber } from 'libphonenumber-js';
+
+
+const phoneSchema = z.string().refine((value) => {
+    if (!value) return true; // Allow empty string
+    return isValidPhoneNumber(value);
+}, {
+    message: 'Invalid phone number'
+});
+
+const storeFormSchema = z.object({
+  storeName: z.string(),
+  storeAddress: z.string(),
+  contactEmail: z.string().email().or(z.literal('')),
+  phone: phoneSchema.optional(),
+  whatsapp: phoneSchema.optional(),
+  'socials.facebook': z.string().url().or(z.literal('')),
+  'socials.instagram': z.string().url().or(z.literal('')),
+  'socials.twitter': z.string().url().or(z.literal('')),
+  'socials.youtube': z.string().url().or(z.literal('')),
+});
 
 export default function SettingsForm({ settings }: { settings: ISettings }) {
   const { toast } = useToast();
@@ -41,11 +66,31 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
   // State for color picker to be controlled
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor || '#2563eb');
 
+  const storeForm = useForm<z.infer<typeof storeFormSchema>>({
+    resolver: zodResolver(storeFormSchema),
+    defaultValues: {
+        storeName: settings.storeName || '',
+        storeAddress: settings.storeAddress || '',
+        contactEmail: settings.contactEmail || '',
+        phone: settings.phone || '',
+        whatsapp: settings.whatsapp || '',
+        'socials.facebook': settings.socials?.facebook || '',
+        'socials.instagram': settings.socials?.instagram || '',
+        'socials.twitter': settings.socials?.twitter || '',
+        'socials.youtube': settings.socials?.youtube || '',
+    }
+  });
 
-  const handleStoreSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+
+  const handleStoreSubmit = async (values: z.infer<typeof storeFormSchema>) => {
     setStoreLoading(true);
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData();
+    for (const [key, value] of Object.entries(values)) {
+        if (value) {
+           formData.append(key, value as string);
+        }
+    }
+    
     try {
         await updateSettings(formData);
         toast({
@@ -100,7 +145,8 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
         </TabsList>
 
         <TabsContent value="store" className="mt-6">
-          <form onSubmit={handleStoreSubmit}>
+          <Form {...storeForm}>
+          <form onSubmit={storeForm.handleSubmit(handleStoreSubmit)}>
             <Card>
               <CardHeader>
                 <CardTitle>Store Details</CardTitle>
@@ -110,68 +156,83 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div>
-                      <Label htmlFor="storeName">Store Name</Label>
-                      <Input id="storeName" name="storeName" defaultValue={settings.storeName} />
-                  </div>
-                  <div>
-                      <Label htmlFor="storeAddress">Store Address</Label>
-                      <Textarea
-                      id="storeAddress"
-                      name="storeAddress"
-                      defaultValue={settings.storeAddress}
-                      />
-                  </div>
+                  <FormField
+                    control={storeForm.control}
+                    name="storeName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Store Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={storeForm.control}
+                    name="storeAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Store Address</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 <div className="space-y-4 border-t pt-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                          <Label htmlFor="contactEmail">Contact Email</Label>
-                          <Input
-                          id="contactEmail"
+                      <FormField
+                          control={storeForm.control}
                           name="contactEmail"
-                          type="email"
-                          defaultValue={settings.contactEmail}
-                          />
-                      </div>
-                      <div>
-                          <Label htmlFor="phone">Phone Number</Label>
-                           <PhoneInput
-                              id="phone"
-                              name="phone"
-                              defaultValue={settings.phone}
-                            />
-                      </div>
-                  </div>
-                  <div>
-                      <Label htmlFor="whatsapp">WhatsApp Number</Label>
-                       <PhoneInput
-                          id="whatsapp"
-                          name="whatsapp"
-                          placeholder="+1 234 567 890"
-                          defaultValue={settings.whatsapp}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Contact Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                          control={storeForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone Number</FormLabel>
+                              <FormControl>
+                                <PhoneInput {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                   </div>
+                    <FormField
+                      control={storeForm.control}
+                      name="whatsapp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>WhatsApp Number</FormLabel>
+                          <FormControl>
+                            <PhoneInput placeholder="+1 234 567 890" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
                 <div className="space-y-4 border-t pt-6">
                     <h3 className="text-lg font-medium">Social Media</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                          <Label htmlFor="socials.facebook">Facebook URL</Label>
-                          <Input id="socials.facebook" name="socials.facebook" defaultValue={settings.socials?.facebook} />
-                      </div>
-                      <div>
-                          <Label htmlFor="socials.instagram">Instagram URL</Label>
-                          <Input id="socials.instagram" name="socials.instagram" defaultValue={settings.socials?.instagram} />
-                      </div>
-                      <div>
-                          <Label htmlFor="socials.twitter">Twitter (X) URL</Label>
-                          <Input id="socials.twitter" name="socials.twitter" defaultValue={settings.socials?.twitter} />
-                      </div>
-                      <div>
-                          <Label htmlFor="socials.youtube">YouTube URL</Label>
-                          <Input id="socials.youtube" name="socials.youtube" defaultValue={settings.socials?.youtube} />
-                      </div>
+                      <FormField control={storeForm.control} name="socials.facebook" render={({field}) => (<FormItem><FormLabel>Facebook URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
+                      <FormField control={storeForm.control} name="socials.instagram" render={({field}) => (<FormItem><FormLabel>Instagram URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
+                      <FormField control={storeForm.control} name="socials.twitter" render={({field}) => (<FormItem><FormLabel>Twitter (X) URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
+                      <FormField control={storeForm.control} name="socials.youtube" render={({field}) => (<FormItem><FormLabel>YouTube URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>)} />
                     </div>
                 </div>
               </CardContent>
@@ -182,6 +243,7 @@ export default function SettingsForm({ settings }: { settings: ISettings }) {
               </CardFooter>
             </Card>
           </form>
+          </Form>
         </TabsContent>
 
         <TabsContent value="appearance" className="mt-6">

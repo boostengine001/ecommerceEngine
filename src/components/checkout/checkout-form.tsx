@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { ISettings } from '@/models/Setting';
 import { getSettings } from '@/lib/actions/setting.actions';
 import { PhoneInput } from '@/components/ui/phone-input';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { IAddress } from '@/models/User';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
