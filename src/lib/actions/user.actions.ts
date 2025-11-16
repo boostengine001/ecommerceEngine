@@ -72,8 +72,12 @@ async function createSession(userId: string) {
 
 export async function getUserFromSession(token?: string): Promise<IUser | null> {
     if (!token) {
-        return null;
+        // Fallback to reading from cookies if no token is passed (for server-side rendering)
+        const cookieStore = await cookies();
+        token = cookieStore.get(COOKIE_NAME)?.value;
     }
+    
+    if (!token) return null;
     
     try {
         const decoded = verify(token, JWT_SECRET) as { userId: string };
