@@ -194,6 +194,15 @@ export async function getOrdersForUser(): Promise<IOrder[]> {
     return JSON.parse(JSON.stringify(orders));
 }
 
+export async function getOrdersByUserId(userId: string): Promise<IOrder[]> {
+    await dbConnect();
+    const orders = await Order.find({ user: userId })
+        .populate('user', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .lean();
+    return JSON.parse(JSON.stringify(orders));
+}
+
 
 export async function getOrderById(id: string): Promise<IOrder | null> {
     await dbConnect();

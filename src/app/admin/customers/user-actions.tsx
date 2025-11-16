@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Edit, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Edit, Archive, ArchiveRestore, Trash2, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import type { IUser } from '@/models/User';
@@ -54,7 +54,11 @@ export default function UserActions({ user }: { user: IUser }) {
             <Edit className="mr-2 h-4 w-4" /> Edit
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled>View Orders</DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/admin/customers/${user._id}/orders`}>
+            <ShoppingCart className="mr-2 h-4 w-4" /> View Orders
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {user.isDeleted ? (
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleAction(() => recoverUser(user._id), 'User recovered'); }}>
