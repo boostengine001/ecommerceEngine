@@ -314,6 +314,7 @@ export async function addAddress(addressData: unknown) {
     dbUser.addresses.push(result.data);
     await dbUser.save();
     revalidatePath('/profile');
+    revalidatePath('/checkout');
 }
 
 export async function updateAddress(addressId: string, addressData: unknown) {
@@ -334,10 +335,17 @@ export async function updateAddress(addressId: string, addressData: unknown) {
 
     const addressIndex = dbUser.addresses.findIndex(addr => addr._id.toString() === addressId);
     if (addressIndex === -1) throw new Error("Address not found.");
+    
+    // Create a new plain object for the updated address to avoid mongoose object issues
+    const updatedAddress = {
+        ...dbUser.addresses[addressIndex].toObject(),
+        ...result.data
+    };
 
-    dbUser.addresses[addressIndex] = { ...dbUser.addresses[addressIndex], ...result.data };
+    dbUser.addresses[addressIndex] = updatedAddress as IAddress;
     await dbUser.save();
     revalidatePath('/profile');
+    revalidatePath('/checkout');
 }
 
 export async function deleteAddress(addressId: string) {
@@ -351,6 +359,7 @@ export async function deleteAddress(addressId: string) {
         { $pull: { addresses: { _id: addressId } } }
     );
     revalidatePath('/profile');
+    revalidatePath('/checkout');
 }
 
 export async function requestPasswordReset(email: string) {

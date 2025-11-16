@@ -67,17 +67,19 @@ export async function createOrder(payload: CreateOrderPayload) {
       user = guestUser;
     }
 
-    if (user && saveAddress) {
+    if (user && !user.isGuest && saveAddress) {
         const dbUser = await User.findById(user._id);
         if (dbUser) {
-            // Check if address already exists
             const addressExists = dbUser.addresses.some(
                 (addr) =>
                 addr.address === shippingAddress.address &&
                 addr.zip === shippingAddress.zip
             );
             if (!addressExists) {
-                dbUser.addresses.push({ ...shippingAddress, isDefault: dbUser.addresses.length === 0 });
+                if(dbUser.addresses.length === 0) {
+                    shippingAddress.isDefault = true;
+                }
+                dbUser.addresses.push(shippingAddress as any);
                 await dbUser.save();
                 revalidatePath('/profile');
             }
